@@ -17,6 +17,18 @@ namespace APP.Domain
         public Db(DbContextOptions options) : base(options)
         {
         }
+
+        protected override void OnModelCreating(ModelBuilder modelBuilder)
+        {
+            modelBuilder.Entity<UserRole>()
+                .HasKey(ur => new { ur.UserId, ur.RoleId });
+
+            modelBuilder.Entity<PlaylistTrack>()
+                .HasKey(pt => new { pt.PlaylistId, pt.TrackId });
+
+            modelBuilder.Entity<TrackArtist>()
+                .HasKey(ta => new { ta.TrackId, ta.ArtistId });
+        }
     }
 }
 
