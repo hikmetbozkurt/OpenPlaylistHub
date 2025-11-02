@@ -1,20 +1,19 @@
+using APP.Domain;
+using APP.Models;
+using APP.Services;
+using CORE.APP.Services.MVC;
+using Microsoft.EntityFrameworkCore;
+
 var builder = WebApplication.CreateBuilder(args);
 
-// Add services to the container.
 builder.Services.AddControllersWithViews();
 
-// TODO HW4: Add DbContext configuration
-// Example (to be implemented in HW4):
-// builder.Services.AddDbContext<Db>(options => 
-//     options.UseSqlite(builder.Configuration.GetConnectionString("Db")));
+builder.Services.AddDbContext<Db>(options => 
+    options.UseSqlite(builder.Configuration.GetConnectionString("Db")));
 
-// TODO HW4: Add service DI registrations
-// Example service registrations (to be implemented in HW4):
-// builder.Services.AddScoped<IService<UserRequest, UserResponse>, UserService>();
-// builder.Services.AddScoped<IService<GroupRequest, GroupResponse>, GroupService>();
-// builder.Services.AddScoped<IService<RoleRequest, RoleResponse>, RoleService>();
-// builder.Services.AddScoped<IService<PlaylistRequest, PlaylistResponse>, PlaylistService>();
-// builder.Services.AddScoped<IService<TrackRequest, TrackResponse>, TrackService>();
+builder.Services.AddScoped<IService<UserRequest, UserResponse>, UserService>();
+builder.Services.AddScoped<IService<GroupRequest, GroupResponse>, GroupService>();
+builder.Services.AddScoped<IService<RoleRequest, RoleResponse>, RoleService>();
 
 var app = builder.Build();
 

@@ -9,6 +9,7 @@ namespace APP.Domain
         public bool IsActive { get; set; }
         public DateTime BirthDate { get; set; }
         public int? GroupId { get; set; }
+        public Group Group { get; set; }
     }
 }
 
