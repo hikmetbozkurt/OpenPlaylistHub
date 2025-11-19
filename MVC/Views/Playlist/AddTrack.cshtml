@@ -1,0 +1,55 @@
+@using APP.Models
+@{
+    ViewData["Title"] = "Add Track to Playlist";
+    var playlist = ViewBag.Playlist as PlaylistResponse;
+    var tracks = ViewBag.Tracks as List<TrackResponse>;
+}
+
+<h1>Add Track to Playlist</h1>
+
+<h4>Playlist: @playlist.Name</h4>
+<hr />
+
+@if (tracks != null && tracks.Any())
+{
+    <table class="table">
+        <thead>
+            <tr>
+                <th>Title</th>
+                <th>Album</th>
+                <th>Duration</th>
+                <th>Rating</th>
+                <th>Genre</th>
+                <th></th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var track in tracks)
+            {
+                <tr>
+                    <td>@track.Title</td>
+                    <td>@track.Album</td>
+                    <td>@track.Duration.ToString(@"mm\:ss")</td>
+                    <td>@track.Rating</td>
+                    <td>@track.Genre</td>
+                    <td>
+                        <form asp-action="AddTrack" method="post">
+                            <input type="hidden" name="playlistId" value="@playlist.Id" />
+                            <input type="hidden" name="trackId" value="@track.Id" />
+                            <input type="submit" value="Add" class="btn btn-primary btn-sm" />
+                        </form>
+                    </td>
+                </tr>
+            }
+        </tbody>
+    </table>
+}
+else
+{
+    <p>No available tracks to add.</p>
+}
+
+<div>
+    <a asp-action="Details" asp-route-id="@playlist.Id">Back to Playlist</a>
+</div>
+

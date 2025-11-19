@@ -1,6 +1,6 @@
-using APP.Domain;
+using APP.DataAccess.Context;
+using APP.Business.Services;
 using APP.Models;
-using APP.Services;
 using CORE.APP.Services.MVC;
 using Microsoft.EntityFrameworkCore;
 
@@ -14,6 +14,8 @@ builder.Services.AddDbContext<Db>(options =>
 builder.Services.AddScoped<IService<UserRequest, UserResponse>, UserService>();
 builder.Services.AddScoped<IService<GroupRequest, GroupResponse>, GroupService>();
 builder.Services.AddScoped<IService<RoleRequest, RoleResponse>, RoleService>();
+builder.Services.AddScoped<IService<PlaylistRequest, PlaylistResponse>, PlaylistService>();
+builder.Services.AddScoped<IService<TrackRequest, TrackResponse>, TrackService>();
 
 var app = builder.Build();
 

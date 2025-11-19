@@ -1,4 +1,4 @@
-namespace APP.Domain
+namespace APP.DataAccess.Entities
 {
     public class User
     {
@@ -10,6 +10,7 @@ namespace APP.Domain
         public DateTime BirthDate { get; set; }
         public int? GroupId { get; set; }
         public Group Group { get; set; }
+        public ICollection<Playlist> Playlists { get; set; }
     }
 }
 

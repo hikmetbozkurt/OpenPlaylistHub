@@ -1,0 +1,46 @@
+@model List<TrackResponse>
+
+@{
+    ViewData["Title"] = "Tracks";
+}
+
+<h1>Tracks</h1>
+
+<p>
+    <a asp-action="Create">Create New</a>
+</p>
+<table class="table">
+    <thead>
+        <tr>
+            <th>Id</th>
+            <th>Title</th>
+            <th>Album</th>
+            <th>Duration</th>
+            <th>Rating</th>
+            <th>Release Date</th>
+            <th>Genre</th>
+            <th>Is Favorite</th>
+            <th></th>
+        </tr>
+    </thead>
+    <tbody>
+@foreach (var item in Model) {
+        <tr>
+            <td>@item.Id</td>
+            <td>@item.Title</td>
+            <td>@item.Album</td>
+            <td>@item.Duration.ToString(@"mm\:ss")</td>
+            <td>@item.Rating</td>
+            <td>@item.ReleaseDate.ToShortDateString()</td>
+            <td>@item.Genre</td>
+            <td>@item.IsFavorite</td>
+            <td>
+                <a asp-action="Edit" asp-route-id="@item.Id">Edit</a> |
+                <a asp-action="Details" asp-route-id="@item.Id">Details</a> |
+                <a asp-action="Delete" asp-route-id="@item.Id">Delete</a>
+            </td>
+        </tr>
+}
+    </tbody>
+</table>
+

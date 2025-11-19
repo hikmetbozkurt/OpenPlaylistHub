@@ -1,11 +1,12 @@
-using APP.Domain;
+using APP.DataAccess.Context;
+using APP.DataAccess.Entities;
 using APP.Models;
 using CORE.APP.Models;
 using CORE.APP.Services;
 using CORE.APP.Services.MVC;
 using Microsoft.EntityFrameworkCore;
 
-namespace APP.Services
+namespace APP.Business.Services
 {
     public class GroupService : Service, IService<GroupRequest, GroupResponse>
     {

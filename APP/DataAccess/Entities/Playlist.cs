@@ -1,4 +1,4 @@
-namespace APP.Domain
+namespace APP.DataAccess.Entities
 {
     public class Playlist
     {
@@ -7,6 +7,9 @@ namespace APP.Domain
         public string Description { get; set; }
         public bool IsPublic { get; set; }
         public DateTime CreatedDate { get; set; }
+        public int UserId { get; set; }
+        public User User { get; set; }
+        public ICollection<PlaylistTrack> PlaylistTracks { get; set; }
     }
 }
 

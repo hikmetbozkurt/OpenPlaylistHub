@@ -1,9 +1,18 @@
-using APP.DataAccess.Entities;
-using CORE.APP.Models;
-
-namespace APP.Models
+namespace APP.DataAccess.Entities
 {
-    public class TrackRequest : Request
+    public enum Genre
+    {
+        Pop,
+        Rock,
+        Jazz,
+        Classical,
+        Electronic,
+        HipHop,
+        Country,
+        Blues
+    }
+
+    public class Track
     {
         public int Id { get; set; }
         public string Title { get; set; }
@@ -13,6 +22,7 @@ namespace APP.Models
         public DateTime ReleaseDate { get; set; }
         public bool IsFavorite { get; set; }
         public Genre Genre { get; set; }
+        public ICollection<PlaylistTrack> PlaylistTracks { get; set; }
     }
 }
 

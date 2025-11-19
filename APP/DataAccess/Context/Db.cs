@@ -1,6 +1,7 @@
+using APP.DataAccess.Entities;
 using Microsoft.EntityFrameworkCore;
 
-namespace APP.Domain
+namespace APP.DataAccess.Context
 {
     public class Db : DbContext
     {

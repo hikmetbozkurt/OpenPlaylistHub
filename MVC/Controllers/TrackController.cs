@@ -1,33 +1,32 @@
-using APP.Business.Services;
 using APP.Models;
 using CORE.APP.Services.MVC;
 using Microsoft.AspNetCore.Mvc;
 
 namespace MVC.Controllers
 {
-    public class GroupController : Controller
+    public class TrackController : Controller
     {
-        private readonly IService<GroupRequest, GroupResponse> _service;
+        private readonly IService<TrackRequest, TrackResponse> _service;
 
-        public GroupController(IService<GroupRequest, GroupResponse> service)
+        public TrackController(IService<TrackRequest, TrackResponse> service)
         {
             _service = service;
         }
 
         public IActionResult Index()
         {
-            var groups = _service.GetAll();
-            return View(groups);
+            var tracks = _service.GetAll();
+            return View(tracks);
         }
 
         public IActionResult Details(int id)
         {
-            var group = _service.GetById(id);
-            if (group == null)
+            var track = _service.GetById(id);
+            if (track == null)
             {
                 return NotFound();
             }
-            return View(group);
+            return View(track);
         }
 
         public IActionResult Create()
@@ -37,7 +36,7 @@ namespace MVC.Controllers
 
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public IActionResult Create(GroupRequest request)
+        public IActionResult Create(TrackRequest request)
         {
             if (ModelState.IsValid)
             {
@@ -49,23 +48,28 @@ namespace MVC.Controllers
 
         public IActionResult Edit(int id)
         {
-            var group = _service.GetById(id);
-            if (group == null)
+            var track = _service.GetById(id);
+            if (track == null)
             {
                 return NotFound();
             }
-            var request = new GroupRequest
+            var request = new TrackRequest
             {
-                Id = group.Id,
-                Name = group.Name,
-                Description = group.Description
+                Id = track.Id,
+                Title = track.Title,
+                Album = track.Album,
+                Duration = track.Duration,
+                Rating = track.Rating,
+                ReleaseDate = track.ReleaseDate,
+                IsFavorite = track.IsFavorite,
+                Genre = track.Genre
             };
             return View(request);
         }
 
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public IActionResult Edit(GroupRequest request)
+        public IActionResult Edit(TrackRequest request)
         {
             if (ModelState.IsValid)
             {
@@ -77,12 +81,12 @@ namespace MVC.Controllers
 
         public IActionResult Delete(int id)
         {
-            var group = _service.GetById(id);
-            if (group == null)
+            var track = _service.GetById(id);
+            if (track == null)
             {
                 return NotFound();
             }
-            return View(group);
+            return View(track);
         }
 
         [HttpPost, ActionName("Delete")]

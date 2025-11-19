@@ -1,4 +1,4 @@
-namespace APP.Domain
+namespace APP.DataAccess.Entities
 {
     public class UserRole
     {

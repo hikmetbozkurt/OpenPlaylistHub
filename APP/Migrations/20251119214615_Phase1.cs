@@ -6,7 +6,7 @@ using Microsoft.EntityFrameworkCore.Migrations;
 namespace APP.Migrations
 {
     /// <inheritdoc />
-    public partial class InitialCreate : Migration
+    public partial class Phase1 : Migration
     {
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
@@ -41,35 +41,6 @@ namespace APP.Migrations
                 });
 
             migrationBuilder.CreateTable(
-                name: "Playlists",
-                columns: table => new
-                {
-                    Id = table.Column<int>(type: "INTEGER", nullable: false)
-                        .Annotation("Sqlite:Autoincrement", true),
-                    Name = table.Column<string>(type: "TEXT", nullable: false),
-                    Description = table.Column<string>(type: "TEXT", nullable: false),
-                    IsPublic = table.Column<bool>(type: "INTEGER", nullable: false),
-                    CreatedDate = table.Column<DateTime>(type: "TEXT", nullable: false)
-                },
-                constraints: table =>
-                {
-                    table.PrimaryKey("PK_Playlists", x => x.Id);
-                });
-
-            migrationBuilder.CreateTable(
-                name: "PlaylistTracks",
-                columns: table => new
-                {
-                    PlaylistId = table.Column<int>(type: "INTEGER", nullable: false),
-                    TrackId = table.Column<int>(type: "INTEGER", nullable: false),
-                    Order = table.Column<int>(type: "INTEGER", nullable: false)
-                },
-                constraints: table =>
-                {
-                    table.PrimaryKey("PK_PlaylistTracks", x => new { x.PlaylistId, x.TrackId });
-                });
-
-            migrationBuilder.CreateTable(
                 name: "Roles",
                 columns: table => new
                 {
@@ -84,18 +55,6 @@ namespace APP.Migrations
                 });
 
             migrationBuilder.CreateTable(
-                name: "TrackArtists",
-                columns: table => new
-                {
-                    TrackId = table.Column<int>(type: "INTEGER", nullable: false),
-                    ArtistId = table.Column<int>(type: "INTEGER", nullable: false)
-                },
-                constraints: table =>
-                {
-                    table.PrimaryKey("PK_TrackArtists", x => new { x.TrackId, x.ArtistId });
-                });
-
-            migrationBuilder.CreateTable(
                 name: "Tracks",
                 columns: table => new
                 {
@@ -105,7 +64,8 @@ namespace APP.Migrations
                     Album = table.Column<string>(type: "TEXT", nullable: false),
                     DurationSeconds = table.Column<int>(type: "INTEGER", nullable: false),
                     Rating = table.Column<decimal>(type: "TEXT", nullable: false),
-                    ReleaseDate = table.Column<DateTime>(type: "TEXT", nullable: false)
+                    ReleaseDate = table.Column<DateTime>(type: "TEXT", nullable: false),
+                    IsExplicit = table.Column<bool>(type: "INTEGER", nullable: false)
                 },
                 constraints: table =>
                 {
@@ -147,6 +107,82 @@ namespace APP.Migrations
                         principalColumn: "Id");
                 });
 
+            migrationBuilder.CreateTable(
+                name: "TrackArtists",
+                columns: table => new
+                {
+                    TrackId = table.Column<int>(type: "INTEGER", nullable: false),
+                    ArtistId = table.Column<int>(type: "INTEGER", nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_TrackArtists", x => new { x.TrackId, x.ArtistId });
+                    table.ForeignKey(
+                        name: "FK_TrackArtists_Tracks_TrackId",
+                        column: x => x.TrackId,
+                        principalTable: "Tracks",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Cascade);
+                });
+
+            migrationBuilder.CreateTable(
+                name: "Playlists",
+                columns: table => new
+                {
+                    Id = table.Column<int>(type: "INTEGER", nullable: false)
+                        .Annotation("Sqlite:Autoincrement", true),
+                    Name = table.Column<string>(type: "TEXT", nullable: false),
+                    Description = table.Column<string>(type: "TEXT", nullable: false),
+                    IsPublic = table.Column<bool>(type: "INTEGER", nullable: false),
+                    CreatedDate = table.Column<DateTime>(type: "TEXT", nullable: false),
+                    UserId = table.Column<int>(type: "INTEGER", nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_Playlists", x => x.Id);
+                    table.ForeignKey(
+                        name: "FK_Playlists_Users_UserId",
+                        column: x => x.UserId,
+                        principalTable: "Users",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Cascade);
+                });
+
+            migrationBuilder.CreateTable(
+                name: "PlaylistTracks",
+                columns: table => new
+                {
+                    PlaylistId = table.Column<int>(type: "INTEGER", nullable: false),
+                    TrackId = table.Column<int>(type: "INTEGER", nullable: false),
+                    Order = table.Column<int>(type: "INTEGER", nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_PlaylistTracks", x => new { x.PlaylistId, x.TrackId });
+                    table.ForeignKey(
+                        name: "FK_PlaylistTracks_Playlists_PlaylistId",
+                        column: x => x.PlaylistId,
+                        principalTable: "Playlists",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Cascade);
+                    table.ForeignKey(
+                        name: "FK_PlaylistTracks_Tracks_TrackId",
+                        column: x => x.TrackId,
+                        principalTable: "Tracks",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Cascade);
+                });
+
+            migrationBuilder.CreateIndex(
+                name: "IX_Playlists_UserId",
+                table: "Playlists",
+                column: "UserId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_PlaylistTracks_TrackId",
+                table: "PlaylistTracks",
+                column: "TrackId");
+
             migrationBuilder.CreateIndex(
                 name: "IX_Users_GroupId",
                 table: "Users",
@@ -160,9 +196,6 @@ namespace APP.Migrations
                 name: "Artists");
 
             migrationBuilder.DropTable(
-                name: "Playlists");
-
-            migrationBuilder.DropTable(
                 name: "PlaylistTracks");
 
             migrationBuilder.DropTable(
@@ -172,10 +205,13 @@ namespace APP.Migrations
                 name: "TrackArtists");
 
             migrationBuilder.DropTable(
-                name: "Tracks");
+                name: "UserRoles");
 
             migrationBuilder.DropTable(
-                name: "UserRoles");
+                name: "Playlists");
+
+            migrationBuilder.DropTable(
+                name: "Tracks");
 
             migrationBuilder.DropTable(
                 name: "Users");
