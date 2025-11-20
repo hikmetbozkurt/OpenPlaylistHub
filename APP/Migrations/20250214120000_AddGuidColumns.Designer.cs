@@ -3,6 +3,7 @@ using System;
 using APP.DataAccess.Context;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -10,9 +11,11 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace APP.Migrations
 {
     [DbContext(typeof(Db))]
-    partial class DbModelSnapshot : ModelSnapshot
+    [Migration("20250214120000_AddGuidColumns")]
+    partial class AddGuidColumns
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder.HasAnnotation("ProductVersion", "7.0.10");
@@ -23,14 +26,14 @@ namespace APP.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("INTEGER");
 
-                    b.Property<string>("Guid")
-                        .HasColumnType("TEXT");
-
                     b.Property<DateTime?>("BirthDate")
                         .HasColumnType("TEXT");
 
                     b.Property<string>("Country")
                         .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Guid")
                         .HasColumnType("TEXT");
 
                     b.Property<string>("Name")
@@ -48,11 +51,11 @@ namespace APP.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("INTEGER");
 
-                    b.Property<string>("Guid")
-                        .HasColumnType("TEXT");
-
                     b.Property<string>("Description")
                         .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Guid")
                         .HasColumnType("TEXT");
 
                     b.Property<string>("Name")
@@ -70,14 +73,14 @@ namespace APP.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("INTEGER");
 
-                    b.Property<string>("Guid")
-                        .HasColumnType("TEXT");
-
                     b.Property<DateTime>("CreatedDate")
                         .HasColumnType("TEXT");
 
                     b.Property<string>("Description")
                         .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Guid")
                         .HasColumnType("TEXT");
 
                     b.Property<bool>("IsPublic")
@@ -121,11 +124,11 @@ namespace APP.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("INTEGER");
 
-                    b.Property<string>("Guid")
-                        .HasColumnType("TEXT");
-
                     b.Property<string>("Description")
                         .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Guid")
                         .HasColumnType("TEXT");
 
                     b.Property<string>("Name")
@@ -143,15 +146,15 @@ namespace APP.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("INTEGER");
 
-                    b.Property<string>("Guid")
-                        .HasColumnType("TEXT");
-
                     b.Property<string>("Album")
                         .IsRequired()
                         .HasColumnType("TEXT");
 
                     b.Property<int>("DurationSeconds")
                         .HasColumnType("INTEGER");
+
+                    b.Property<string>("Guid")
+                        .HasColumnType("TEXT");
 
                     b.Property<bool>("IsExplicit")
                         .HasColumnType("INTEGER");
@@ -190,9 +193,6 @@ namespace APP.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("INTEGER");
 
-                    b.Property<string>("Guid")
-                        .HasColumnType("TEXT");
-
                     b.Property<DateTime>("BirthDate")
                         .HasColumnType("TEXT");
 
@@ -202,6 +202,9 @@ namespace APP.Migrations
 
                     b.Property<int?>("GroupId")
                         .HasColumnType("INTEGER");
+
+                    b.Property<string>("Guid")
+                        .HasColumnType("TEXT");
 
                     b.Property<bool>("IsActive")
                         .HasColumnType("INTEGER");
@@ -219,19 +222,6 @@ namespace APP.Migrations
                     b.HasIndex("GroupId");
 
                     b.ToTable("Users");
-                });
-
-            modelBuilder.Entity("APP.DataAccess.Entities.UserRole", b =>
-                {
-                    b.Property<int>("UserId")
-                        .HasColumnType("INTEGER");
-
-                    b.Property<int>("RoleId")
-                        .HasColumnType("INTEGER");
-
-                    b.HasKey("UserId", "RoleId");
-
-                    b.ToTable("UserRoles");
                 });
 
             modelBuilder.Entity("APP.DataAccess.Entities.Playlist", b =>
@@ -264,15 +254,6 @@ namespace APP.Migrations
                     b.Navigation("Track");
                 });
 
-            modelBuilder.Entity("APP.DataAccess.Entities.TrackArtist", b =>
-                {
-                    b.HasOne("APP.DataAccess.Entities.Track", null)
-                        .WithMany("TrackArtists")
-                        .HasForeignKey("TrackId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-                });
-
             modelBuilder.Entity("APP.DataAccess.Entities.User", b =>
                 {
                     b.HasOne("APP.DataAccess.Entities.Group", "Group")
@@ -295,8 +276,6 @@ namespace APP.Migrations
             modelBuilder.Entity("APP.DataAccess.Entities.Track", b =>
                 {
                     b.Navigation("PlaylistTracks");
-
-                    b.Navigation("TrackArtists");
                 });
 
             modelBuilder.Entity("APP.DataAccess.Entities.User", b =>
