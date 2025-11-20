@@ -8,35 +8,51 @@ using Microsoft.EntityFrameworkCore;
 
 namespace APP.Business.Services
 {
-    public class GroupService : Service, IService<GroupRequest, GroupResponse>
+    public class GroupService : Service<Group>, IService<GroupRequest, GroupResponse>
     {
         private readonly Db _db;
 
-        public GroupService(Db db)
+        public GroupService(Db db) : base(db)
         {
             _db = db;
         }
 
-        public List<GroupResponse> GetAll()
+        public List<GroupResponse> List()
         {
-            return _db.Groups
+            return Query()
                 .Select(g => new GroupResponse
                 {
                     Id = g.Id,
+                    Guid = g.Guid,
                     Name = g.Name,
                     Description = g.Description
                 })
                 .ToList();
         }
 
-        public GroupResponse GetById(int id)
+        public GroupResponse Item(int id)
         {
-            var group = _db.Groups.FirstOrDefault(g => g.Id == id);
+            return Query()
+                .Where(g => g.Id == id)
+                .Select(g => new GroupResponse
+                {
+                    Id = g.Id,
+                    Guid = g.Guid,
+                    Name = g.Name,
+                    Description = g.Description
+                })
+                .SingleOrDefault();
+        }
 
+        public GroupRequest Edit(int id)
+        {
+            var group = Query().FirstOrDefault(g => g.Id == id);
             if (group == null)
+            {
                 return null;
+            }
 
-            return new GroupResponse
+            return new GroupRequest
             {
                 Id = group.Id,
                 Name = group.Name,
@@ -46,43 +62,59 @@ namespace APP.Business.Services
 
         public CommandResponse Create(GroupRequest request)
         {
-            var group = new Group
+            if (_db.Groups.Any(g => g.Name == request.Name))
+            {
+                return Error("Group with the same name already exists.");
+            }
+
+            var entity = new Group
             {
                 Name = request.Name,
                 Description = request.Description
             };
 
-            _db.Groups.Add(group);
-            _db.SaveChanges();
+            Create(entity);
 
-            return new CommandResponse();
+            return Success("Group created successfully.", entity.Id);
         }
 
         public CommandResponse Update(GroupRequest request)
         {
-            var group = _db.Groups.FirstOrDefault(g => g.Id == request.Id);
-            if (group == null)
-                return new CommandResponse();
+            var entity = Query(false).FirstOrDefault(g => g.Id == request.Id);
+            if (entity == null)
+            {
+                return Error("Group not found!");
+            }
 
-            group.Name = request.Name;
-            group.Description = request.Description;
+            if (_db.Groups.Any(g => g.Id != request.Id && g.Name == request.Name))
+            {
+                return Error("Group with the same name already exists.");
+            }
 
-            _db.SaveChanges();
+            entity.Name = request.Name;
+            entity.Description = request.Description;
 
-            return new CommandResponse();
+            Update(entity);
+
+            return Success("Group updated successfully.", entity.Id);
         }
 
         public CommandResponse Delete(int id)
         {
-            var group = _db.Groups.FirstOrDefault(g => g.Id == id);
-            if (group == null)
-                return new CommandResponse();
+            if (_db.Users.Any(u => u.GroupId == id))
+            {
+                return Error("Group cannot be deleted while it is assigned to users.");
+            }
 
-            _db.Groups.Remove(group);
-            _db.SaveChanges();
+            var entity = Query(false).FirstOrDefault(g => g.Id == id);
+            if (entity == null)
+            {
+                return Error("Group not found!");
+            }
 
-            return new CommandResponse();
+            Delete(entity);
+
+            return Success("Group deleted successfully.", id);
         }
     }
 }
-

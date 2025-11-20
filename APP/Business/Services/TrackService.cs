@@ -8,21 +8,22 @@ using Microsoft.EntityFrameworkCore;
 
 namespace APP.Business.Services
 {
-    public class TrackService : Service, IService<TrackRequest, TrackResponse>
+    public class TrackService : Service<Track>, IService<TrackRequest, TrackResponse>
     {
         private readonly Db _db;
 
-        public TrackService(Db db)
+        public TrackService(Db db) : base(db)
         {
             _db = db;
         }
 
-        public List<TrackResponse> GetAll()
+        public List<TrackResponse> List()
         {
-            return _db.Tracks
+            return Query()
                 .Select(t => new TrackResponse
                 {
                     Id = t.Id,
+                    Guid = t.Guid,
                     Title = t.Title,
                     Album = t.Album,
                     Duration = t.Duration,
@@ -31,17 +32,38 @@ namespace APP.Business.Services
                     IsFavorite = t.IsFavorite,
                     Genre = t.Genre
                 })
+                .OrderBy(t => t.Title)
                 .ToList();
         }
 
-        public TrackResponse GetById(int id)
+        public TrackResponse Item(int id)
         {
-            var track = _db.Tracks.FirstOrDefault(t => t.Id == id);
+            return Query()
+                .Where(t => t.Id == id)
+                .Select(t => new TrackResponse
+                {
+                    Id = t.Id,
+                    Guid = t.Guid,
+                    Title = t.Title,
+                    Album = t.Album,
+                    Duration = t.Duration,
+                    Rating = t.Rating,
+                    ReleaseDate = t.ReleaseDate,
+                    IsFavorite = t.IsFavorite,
+                    Genre = t.Genre
+                })
+                .SingleOrDefault();
+        }
 
+        public TrackRequest Edit(int id)
+        {
+            var track = Query().FirstOrDefault(t => t.Id == id);
             if (track == null)
+            {
                 return null;
+            }
 
-            return new TrackResponse
+            return new TrackRequest
             {
                 Id = track.Id,
                 Title = track.Title,
@@ -56,7 +78,7 @@ namespace APP.Business.Services
 
         public CommandResponse Create(TrackRequest request)
         {
-            var track = new Track
+            var entity = new Track
             {
                 Title = request.Title,
                 Album = request.Album,
@@ -67,45 +89,50 @@ namespace APP.Business.Services
                 Genre = request.Genre
             };
 
-            _db.Tracks.Add(track);
-            _db.SaveChanges();
+            Create(entity);
 
-            return new CommandResponse();
+            return Success("Track created successfully.", entity.Id);
         }
 
         public CommandResponse Update(TrackRequest request)
         {
-            var track = _db.Tracks.FirstOrDefault(t => t.Id == request.Id);
-            if (track == null)
-                return new CommandResponse();
+            var entity = Query(false).FirstOrDefault(t => t.Id == request.Id);
+            if (entity == null)
+            {
+                return Error("Track not found!");
+            }
 
-            track.Title = request.Title;
-            track.Album = request.Album;
-            track.Duration = request.Duration;
-            track.Rating = request.Rating;
-            track.ReleaseDate = request.ReleaseDate;
-            track.IsFavorite = request.IsFavorite;
-            track.Genre = request.Genre;
+            entity.Title = request.Title;
+            entity.Album = request.Album;
+            entity.Duration = request.Duration;
+            entity.Rating = request.Rating;
+            entity.ReleaseDate = request.ReleaseDate;
+            entity.IsFavorite = request.IsFavorite;
+            entity.Genre = request.Genre;
 
-            _db.SaveChanges();
+            Update(entity);
 
-            return new CommandResponse();
+            return Success("Track updated successfully.", entity.Id);
         }
 
         public CommandResponse Delete(int id)
         {
-            var track = _db.Tracks
+            var entity = Query(false)
                 .Include(t => t.PlaylistTracks)
-                .FirstOrDefault(t => t.Id == id);
-            if (track == null)
-                return new CommandResponse();
+                .SingleOrDefault(t => t.Id == id);
+            if (entity == null)
+            {
+                return Error("Track not found!");
+            }
 
-            _db.PlaylistTracks.RemoveRange(track.PlaylistTracks);
-            _db.Tracks.Remove(track);
-            _db.SaveChanges();
+            if (entity.PlaylistTracks?.Any() == true)
+            {
+                _db.PlaylistTracks.RemoveRange(entity.PlaylistTracks);
+            }
 
-            return new CommandResponse();
+            Delete(entity);
+
+            return Success("Track deleted successfully.", id);
         }
     }
 }
-

@@ -1,3 +1,4 @@
+using System.Linq;
 using APP.Business.Services;
 using APP.Models;
 using CORE.APP.Services.MVC;
@@ -26,13 +27,13 @@ namespace MVC.Controllers
 
         public IActionResult Index()
         {
-            var playlists = _service.GetAll();
+            var playlists = _service.List();
             return View(playlists);
         }
 
         public IActionResult Details(int id)
         {
-            var playlist = _service.GetById(id);
+            var playlist = _service.Item(id);
             if (playlist == null)
             {
                 return NotFound();
@@ -42,7 +43,7 @@ namespace MVC.Controllers
 
         public IActionResult Create()
         {
-            ViewBag.Users = _userService.GetAll();
+            ViewBag.Users = _userService.List();
             return View();
         }
 
@@ -53,30 +54,25 @@ namespace MVC.Controllers
             if (ModelState.IsValid)
             {
                 request.CreatedDate = DateTime.Now;
-                _service.Create(request);
-                return RedirectToAction(nameof(Index));
+                var response = _service.Create(request);
+                if (response.IsSuccessful)
+                {
+                    return RedirectToAction(nameof(Details), new { id = response.Id });
+                }
+                ModelState.AddModelError(string.Empty, response.Message);
             }
-            ViewBag.Users = _userService.GetAll();
+            ViewBag.Users = _userService.List();
             return View(request);
         }
 
         public IActionResult Edit(int id)
         {
-            var playlist = _service.GetById(id);
-            if (playlist == null)
+            var request = _service.Edit(id);
+            if (request == null)
             {
                 return NotFound();
             }
-            ViewBag.Users = _userService.GetAll();
-            var request = new PlaylistRequest
-            {
-                Id = playlist.Id,
-                Name = playlist.Name,
-                Description = playlist.Description,
-                IsPublic = playlist.IsPublic,
-                CreatedDate = playlist.CreatedDate,
-                UserId = playlist.UserId
-            };
+            ViewBag.Users = _userService.List();
             return View(request);
         }
 
@@ -86,16 +82,20 @@ namespace MVC.Controllers
         {
             if (ModelState.IsValid)
             {
-                _service.Update(request);
-                return RedirectToAction(nameof(Index));
+                var response = _service.Update(request);
+                if (response.IsSuccessful)
+                {
+                    return RedirectToAction(nameof(Details), new { id = response.Id });
+                }
+                ModelState.AddModelError(string.Empty, response.Message);
             }
-            ViewBag.Users = _userService.GetAll();
+            ViewBag.Users = _userService.List();
             return View(request);
         }
 
         public IActionResult Delete(int id)
         {
-            var playlist = _service.GetById(id);
+            var playlist = _service.Item(id);
             if (playlist == null)
             {
                 return NotFound();
@@ -107,19 +107,25 @@ namespace MVC.Controllers
         [ValidateAntiForgeryToken]
         public IActionResult DeleteConfirmed(int id)
         {
-            _service.Delete(id);
+            var response = _service.Delete(id);
+            if (!response.IsSuccessful)
+            {
+                ModelState.AddModelError(string.Empty, response.Message);
+                var playlist = _service.Item(id);
+                return View(playlist);
+            }
             return RedirectToAction(nameof(Index));
         }
 
         public IActionResult AddTrack(int id)
         {
-            var playlist = _service.GetById(id);
+            var playlist = _service.Item(id);
             if (playlist == null)
             {
                 return NotFound();
             }
             ViewBag.Playlist = playlist;
-            var allTracks = _trackService.GetAll();
+            var allTracks = _trackService.List();
             var playlistTrackIds = playlist.Tracks.Select(t => t.Id).ToList();
             ViewBag.Tracks = allTracks.Where(t => !playlistTrackIds.Contains(t.Id)).ToList();
             return View();
@@ -129,7 +135,11 @@ namespace MVC.Controllers
         [ValidateAntiForgeryToken]
         public IActionResult AddTrack(int playlistId, int trackId)
         {
-            _playlistService.AddTrackToPlaylist(playlistId, trackId);
+            var response = _playlistService.AddTrackToPlaylist(playlistId, trackId);
+            if (!response.IsSuccessful)
+            {
+                TempData["Message"] = response.Message;
+            }
             return RedirectToAction(nameof(Details), new { id = playlistId });
         }
 
@@ -137,9 +147,12 @@ namespace MVC.Controllers
         [ValidateAntiForgeryToken]
         public IActionResult RemoveTrack(int playlistId, int trackId)
         {
-            _playlistService.RemoveTrackFromPlaylist(playlistId, trackId);
+            var response = _playlistService.RemoveTrackFromPlaylist(playlistId, trackId);
+            if (!response.IsSuccessful)
+            {
+                TempData["Message"] = response.Message;
+            }
             return RedirectToAction(nameof(Details), new { id = playlistId });
         }
     }
 }
-

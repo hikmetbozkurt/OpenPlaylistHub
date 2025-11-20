@@ -8,35 +8,51 @@ using Microsoft.EntityFrameworkCore;
 
 namespace APP.Business.Services
 {
-    public class RoleService : Service, IService<RoleRequest, RoleResponse>
+    public class RoleService : Service<Role>, IService<RoleRequest, RoleResponse>
     {
         private readonly Db _db;
 
-        public RoleService(Db db)
+        public RoleService(Db db) : base(db)
         {
             _db = db;
         }
 
-        public List<RoleResponse> GetAll()
+        public List<RoleResponse> List()
         {
-            return _db.Roles
+            return Query()
                 .Select(r => new RoleResponse
                 {
                     Id = r.Id,
+                    Guid = r.Guid,
                     Name = r.Name,
                     Description = r.Description
                 })
                 .ToList();
         }
 
-        public RoleResponse GetById(int id)
+        public RoleResponse Item(int id)
         {
-            var role = _db.Roles.FirstOrDefault(r => r.Id == id);
+            return Query()
+                .Where(r => r.Id == id)
+                .Select(r => new RoleResponse
+                {
+                    Id = r.Id,
+                    Guid = r.Guid,
+                    Name = r.Name,
+                    Description = r.Description
+                })
+                .SingleOrDefault();
+        }
 
+        public RoleRequest Edit(int id)
+        {
+            var role = Query().FirstOrDefault(r => r.Id == id);
             if (role == null)
+            {
                 return null;
+            }
 
-            return new RoleResponse
+            return new RoleRequest
             {
                 Id = role.Id,
                 Name = role.Name,
@@ -46,43 +62,59 @@ namespace APP.Business.Services
 
         public CommandResponse Create(RoleRequest request)
         {
-            var role = new Role
+            if (_db.Roles.Any(r => r.Name == request.Name))
+            {
+                return Error("Role with the same name already exists.");
+            }
+
+            var entity = new Role
             {
                 Name = request.Name,
                 Description = request.Description
             };
 
-            _db.Roles.Add(role);
-            _db.SaveChanges();
+            Create(entity);
 
-            return new CommandResponse();
+            return Success("Role created successfully.", entity.Id);
         }
 
         public CommandResponse Update(RoleRequest request)
         {
-            var role = _db.Roles.FirstOrDefault(r => r.Id == request.Id);
-            if (role == null)
-                return new CommandResponse();
+            var entity = Query(false).FirstOrDefault(r => r.Id == request.Id);
+            if (entity == null)
+            {
+                return Error("Role not found!");
+            }
 
-            role.Name = request.Name;
-            role.Description = request.Description;
+            if (_db.Roles.Any(r => r.Id != request.Id && r.Name == request.Name))
+            {
+                return Error("Role with the same name already exists.");
+            }
 
-            _db.SaveChanges();
+            entity.Name = request.Name;
+            entity.Description = request.Description;
 
-            return new CommandResponse();
+            Update(entity);
+
+            return Success("Role updated successfully.", entity.Id);
         }
 
         public CommandResponse Delete(int id)
         {
-            var role = _db.Roles.FirstOrDefault(r => r.Id == id);
-            if (role == null)
-                return new CommandResponse();
+            var entity = Query(false).FirstOrDefault(r => r.Id == id);
+            if (entity == null)
+            {
+                return Error("Role not found!");
+            }
 
-            _db.Roles.Remove(role);
-            _db.SaveChanges();
+            if (_db.UserRoles.Any(ur => ur.RoleId == id))
+            {
+                return Error("Role cannot be deleted while it is assigned to users.");
+            }
 
-            return new CommandResponse();
+            Delete(entity);
+
+            return Success("Role deleted successfully.", id);
         }
     }
 }
-

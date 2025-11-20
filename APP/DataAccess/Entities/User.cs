@@ -1,8 +1,9 @@
+using CORE.APP.Domain;
+
 namespace APP.DataAccess.Entities
 {
-    public class User
+    public class User : Entity
     {
-        public int Id { get; set; }
         public string UserName { get; set; }
         public string Email { get; set; }
         public string Password { get; set; }
@@ -13,4 +14,3 @@ namespace APP.DataAccess.Entities
         public ICollection<Playlist> Playlists { get; set; }
     }
 }
-

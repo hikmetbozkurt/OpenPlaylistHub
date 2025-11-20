@@ -1,3 +1,5 @@
+using CORE.APP.Domain;
+
 namespace APP.DataAccess.Entities
 {
     public enum Genre
@@ -12,9 +14,8 @@ namespace APP.DataAccess.Entities
         Blues
     }
 
-    public class Track
+    public class Track : Entity
     {
-        public int Id { get; set; }
         public string Title { get; set; }
         public string Album { get; set; }
         public TimeSpan Duration { get; set; }
@@ -25,4 +26,3 @@ namespace APP.DataAccess.Entities
         public ICollection<PlaylistTrack> PlaylistTracks { get; set; }
     }
 }
-

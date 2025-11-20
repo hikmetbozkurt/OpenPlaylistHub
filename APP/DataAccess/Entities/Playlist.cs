@@ -1,8 +1,9 @@
+using CORE.APP.Domain;
+
 namespace APP.DataAccess.Entities
 {
-    public class Playlist
+    public class Playlist : Entity
     {
-        public int Id { get; set; }
         public string Name { get; set; }
         public string Description { get; set; }
         public bool IsPublic { get; set; }
@@ -12,4 +13,3 @@ namespace APP.DataAccess.Entities
         public ICollection<PlaylistTrack> PlaylistTracks { get; set; }
     }
 }
-

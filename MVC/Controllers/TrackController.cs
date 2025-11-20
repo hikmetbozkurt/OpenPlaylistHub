@@ -15,13 +15,13 @@ namespace MVC.Controllers
 
         public IActionResult Index()
         {
-            var tracks = _service.GetAll();
+            var tracks = _service.List();
             return View(tracks);
         }
 
         public IActionResult Details(int id)
         {
-            var track = _service.GetById(id);
+            var track = _service.Item(id);
             if (track == null)
             {
                 return NotFound();
@@ -40,30 +40,23 @@ namespace MVC.Controllers
         {
             if (ModelState.IsValid)
             {
-                _service.Create(request);
-                return RedirectToAction(nameof(Index));
+                var response = _service.Create(request);
+                if (response.IsSuccessful)
+                {
+                    return RedirectToAction(nameof(Details), new { id = response.Id });
+                }
+                ModelState.AddModelError(string.Empty, response.Message);
             }
             return View(request);
         }
 
         public IActionResult Edit(int id)
         {
-            var track = _service.GetById(id);
-            if (track == null)
+            var request = _service.Edit(id);
+            if (request == null)
             {
                 return NotFound();
             }
-            var request = new TrackRequest
-            {
-                Id = track.Id,
-                Title = track.Title,
-                Album = track.Album,
-                Duration = track.Duration,
-                Rating = track.Rating,
-                ReleaseDate = track.ReleaseDate,
-                IsFavorite = track.IsFavorite,
-                Genre = track.Genre
-            };
             return View(request);
         }
 
@@ -73,15 +66,19 @@ namespace MVC.Controllers
         {
             if (ModelState.IsValid)
             {
-                _service.Update(request);
-                return RedirectToAction(nameof(Index));
+                var response = _service.Update(request);
+                if (response.IsSuccessful)
+                {
+                    return RedirectToAction(nameof(Details), new { id = response.Id });
+                }
+                ModelState.AddModelError(string.Empty, response.Message);
             }
             return View(request);
         }
 
         public IActionResult Delete(int id)
         {
-            var track = _service.GetById(id);
+            var track = _service.Item(id);
             if (track == null)
             {
                 return NotFound();
@@ -93,9 +90,14 @@ namespace MVC.Controllers
         [ValidateAntiForgeryToken]
         public IActionResult DeleteConfirmed(int id)
         {
-            _service.Delete(id);
+            var response = _service.Delete(id);
+            if (!response.IsSuccessful)
+            {
+                ModelState.AddModelError(string.Empty, response.Message);
+                var track = _service.Item(id);
+                return View(track);
+            }
             return RedirectToAction(nameof(Index));
         }
     }
 }
-

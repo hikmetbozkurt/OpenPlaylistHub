@@ -18,13 +18,13 @@ namespace MVC.Controllers
 
         public IActionResult Index()
         {
-            var users = _service.GetAll();
+            var users = _service.List();
             return View(users);
         }
 
         public IActionResult Details(int id)
         {
-            var user = _service.GetById(id);
+            var user = _service.Item(id);
             if (user == null)
             {
                 return NotFound();
@@ -34,7 +34,7 @@ namespace MVC.Controllers
 
         public IActionResult Create()
         {
-            ViewBag.Groups = _groupService.GetAll();
+            ViewBag.Groups = _groupService.List();
             return View();
         }
 
@@ -44,31 +44,25 @@ namespace MVC.Controllers
         {
             if (ModelState.IsValid)
             {
-                _service.Create(request);
-                return RedirectToAction(nameof(Index));
+                var response = _service.Create(request);
+                if (response.IsSuccessful)
+                {
+                    return RedirectToAction(nameof(Details), new { id = response.Id });
+                }
+                ModelState.AddModelError(string.Empty, response.Message);
             }
-            ViewBag.Groups = _groupService.GetAll();
+            ViewBag.Groups = _groupService.List();
             return View(request);
         }
 
         public IActionResult Edit(int id)
         {
-            var user = _service.GetById(id);
-            if (user == null)
+            var request = _service.Edit(id);
+            if (request == null)
             {
                 return NotFound();
             }
-            ViewBag.Groups = _groupService.GetAll();
-            var request = new UserRequest
-            {
-                Id = user.Id,
-                UserName = user.UserName,
-                Email = user.Email,
-                Password = string.Empty,
-                IsActive = user.IsActive,
-                BirthDate = user.BirthDate,
-                GroupId = user.GroupId
-            };
+            ViewBag.Groups = _groupService.List();
             return View(request);
         }
 
@@ -78,16 +72,20 @@ namespace MVC.Controllers
         {
             if (ModelState.IsValid)
             {
-                _service.Update(request);
-                return RedirectToAction(nameof(Index));
+                var response = _service.Update(request);
+                if (response.IsSuccessful)
+                {
+                    return RedirectToAction(nameof(Details), new { id = response.Id });
+                }
+                ModelState.AddModelError(string.Empty, response.Message);
             }
-            ViewBag.Groups = _groupService.GetAll();
+            ViewBag.Groups = _groupService.List();
             return View(request);
         }
 
         public IActionResult Delete(int id)
         {
-            var user = _service.GetById(id);
+            var user = _service.Item(id);
             if (user == null)
             {
                 return NotFound();
@@ -99,9 +97,14 @@ namespace MVC.Controllers
         [ValidateAntiForgeryToken]
         public IActionResult DeleteConfirmed(int id)
         {
-            _service.Delete(id);
+            var response = _service.Delete(id);
+            if (!response.IsSuccessful)
+            {
+                ModelState.AddModelError(string.Empty, response.Message);
+                var user = _service.Item(id);
+                return View(user);
+            }
             return RedirectToAction(nameof(Index));
         }
     }
 }
-

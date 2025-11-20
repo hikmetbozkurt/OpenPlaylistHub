@@ -8,22 +8,27 @@ using Microsoft.EntityFrameworkCore;
 
 namespace APP.Business.Services
 {
-    public class UserService : Service, IService<UserRequest, UserResponse>
+    public class UserService : Service<User>, IService<UserRequest, UserResponse>
     {
         private readonly Db _db;
 
-        public UserService(Db db)
+        public UserService(Db db) : base(db)
         {
             _db = db;
         }
 
-        public List<UserResponse> GetAll()
+        protected override IQueryable<User> Query(bool isNoTracking = true)
         {
-            return _db.Users
-                .Include(u => u.Group)
+            return base.Query(isNoTracking).Include(u => u.Group);
+        }
+
+        public List<UserResponse> List()
+        {
+            return Query()
                 .Select(u => new UserResponse
                 {
                     Id = u.Id,
+                    Guid = u.Guid,
                     UserName = u.UserName,
                     Email = u.Email,
                     IsActive = u.IsActive,
@@ -34,30 +39,52 @@ namespace APP.Business.Services
                 .ToList();
         }
 
-        public UserResponse GetById(int id)
+        public UserResponse Item(int id)
         {
-            var user = _db.Users
-                .Include(u => u.Group)
-                .FirstOrDefault(u => u.Id == id);
+            return Query()
+                .Where(u => u.Id == id)
+                .Select(u => new UserResponse
+                {
+                    Id = u.Id,
+                    Guid = u.Guid,
+                    UserName = u.UserName,
+                    Email = u.Email,
+                    IsActive = u.IsActive,
+                    BirthDate = u.BirthDate,
+                    GroupId = u.GroupId,
+                    GroupName = u.Group != null ? u.Group.Name : null
+                })
+                .SingleOrDefault();
+        }
 
+        public UserRequest Edit(int id)
+        {
+            var user = Query().FirstOrDefault(u => u.Id == id);
             if (user == null)
+            {
                 return null;
+            }
 
-            return new UserResponse
+            return new UserRequest
             {
                 Id = user.Id,
                 UserName = user.UserName,
                 Email = user.Email,
+                Password = string.Empty,
                 IsActive = user.IsActive,
                 BirthDate = user.BirthDate,
-                GroupId = user.GroupId,
-                GroupName = user.Group != null ? user.Group.Name : null
+                GroupId = user.GroupId
             };
         }
 
         public CommandResponse Create(UserRequest request)
         {
-            var user = new User
+            if (_db.Users.Any(u => u.Email == request.Email))
+            {
+                return Error("User with the same e-mail already exists.");
+            }
+
+            var entity = new User
             {
                 UserName = request.UserName,
                 Email = request.Email,
@@ -67,44 +94,55 @@ namespace APP.Business.Services
                 GroupId = request.GroupId
             };
 
-            _db.Users.Add(user);
-            _db.SaveChanges();
+            Create(entity);
 
-            return new CommandResponse();
+            return Success("User created successfully.", entity.Id);
         }
 
         public CommandResponse Update(UserRequest request)
         {
-            var user = _db.Users.FirstOrDefault(u => u.Id == request.Id);
-            if (user == null)
-                return new CommandResponse();
-
-            user.UserName = request.UserName;
-            user.Email = request.Email;
-            if (!string.IsNullOrEmpty(request.Password))
+            var entity = Query(false).FirstOrDefault(u => u.Id == request.Id);
+            if (entity == null)
             {
-                user.Password = request.Password;
+                return Error("User not found!");
             }
-            user.IsActive = request.IsActive;
-            user.BirthDate = request.BirthDate;
-            user.GroupId = request.GroupId;
 
-            _db.SaveChanges();
+            if (_db.Users.Any(u => u.Id != request.Id && u.Email == request.Email))
+            {
+                return Error("User with the same e-mail already exists.");
+            }
 
-            return new CommandResponse();
+            entity.UserName = request.UserName;
+            entity.Email = request.Email;
+            if (!string.IsNullOrWhiteSpace(request.Password))
+            {
+                entity.Password = request.Password;
+            }
+            entity.IsActive = request.IsActive;
+            entity.BirthDate = request.BirthDate;
+            entity.GroupId = request.GroupId;
+
+            Update(entity);
+
+            return Success("User updated successfully.", entity.Id);
         }
 
         public CommandResponse Delete(int id)
         {
-            var user = _db.Users.FirstOrDefault(u => u.Id == id);
-            if (user == null)
-                return new CommandResponse();
+            var entity = Query(false).Include(u => u.Playlists).SingleOrDefault(u => u.Id == id);
+            if (entity == null)
+            {
+                return Error("User not found!");
+            }
 
-            _db.Users.Remove(user);
-            _db.SaveChanges();
+            if (entity.Playlists?.Any() == true)
+            {
+                _db.Playlists.RemoveRange(entity.Playlists);
+            }
 
-            return new CommandResponse();
+            Delete(entity);
+
+            return Success("User deleted successfully.", id);
         }
     }
 }
-

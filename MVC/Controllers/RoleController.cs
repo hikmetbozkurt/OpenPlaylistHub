@@ -16,13 +16,13 @@ namespace MVC.Controllers
 
         public IActionResult Index()
         {
-            var roles = _service.GetAll();
+            var roles = _service.List();
             return View(roles);
         }
 
         public IActionResult Details(int id)
         {
-            var role = _service.GetById(id);
+            var role = _service.Item(id);
             if (role == null)
             {
                 return NotFound();
@@ -41,25 +41,23 @@ namespace MVC.Controllers
         {
             if (ModelState.IsValid)
             {
-                _service.Create(request);
-                return RedirectToAction(nameof(Index));
+                var response = _service.Create(request);
+                if (response.IsSuccessful)
+                {
+                    return RedirectToAction(nameof(Details), new { id = response.Id });
+                }
+                ModelState.AddModelError(string.Empty, response.Message);
             }
             return View(request);
         }
 
         public IActionResult Edit(int id)
         {
-            var role = _service.GetById(id);
-            if (role == null)
+            var request = _service.Edit(id);
+            if (request == null)
             {
                 return NotFound();
             }
-            var request = new RoleRequest
-            {
-                Id = role.Id,
-                Name = role.Name,
-                Description = role.Description
-            };
             return View(request);
         }
 
@@ -69,15 +67,19 @@ namespace MVC.Controllers
         {
             if (ModelState.IsValid)
             {
-                _service.Update(request);
-                return RedirectToAction(nameof(Index));
+                var response = _service.Update(request);
+                if (response.IsSuccessful)
+                {
+                    return RedirectToAction(nameof(Details), new { id = response.Id });
+                }
+                ModelState.AddModelError(string.Empty, response.Message);
             }
             return View(request);
         }
 
         public IActionResult Delete(int id)
         {
-            var role = _service.GetById(id);
+            var role = _service.Item(id);
             if (role == null)
             {
                 return NotFound();
@@ -89,9 +91,14 @@ namespace MVC.Controllers
         [ValidateAntiForgeryToken]
         public IActionResult DeleteConfirmed(int id)
         {
-            _service.Delete(id);
+            var response = _service.Delete(id);
+            if (!response.IsSuccessful)
+            {
+                ModelState.AddModelError(string.Empty, response.Message);
+                var role = _service.Item(id);
+                return View(role);
+            }
             return RedirectToAction(nameof(Index));
         }
     }
 }
-

@@ -6,6 +6,11 @@
 
 <h1>Playlist Details</h1>
 
+@if (TempData["Message"] is string message && !string.IsNullOrWhiteSpace(message))
+{
+    <div class="alert alert-warning">@message</div>
+}
+
 <div>
     <h4>Playlist</h4>
     <hr />
@@ -95,4 +100,3 @@
     <a asp-action="Edit" asp-route-id="@Model.Id">Edit</a> |
     <a asp-action="Index">Back to List</a>
 </div>
-
