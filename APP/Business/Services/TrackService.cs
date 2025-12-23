@@ -20,6 +20,8 @@ namespace APP.Business.Services
         public List<TrackResponse> List()
         {
             return Query()
+                .OrderBy(t => t.Title)
+                .ToList()
                 .Select(t => new TrackResponse
                 {
                     Id = t.Id,
@@ -28,31 +30,37 @@ namespace APP.Business.Services
                     Album = t.Album,
                     Duration = t.Duration,
                     Rating = t.Rating,
+                    RatingFormatted = t.Rating.ToString("N1"),
                     ReleaseDate = t.ReleaseDate,
+                    ReleaseDateFormatted = t.ReleaseDate.ToShortDateString(),
                     IsFavorite = t.IsFavorite,
                     Genre = t.Genre
                 })
-                .OrderBy(t => t.Title)
                 .ToList();
         }
 
         public TrackResponse Item(int id)
         {
-            return Query()
-                .Where(t => t.Id == id)
-                .Select(t => new TrackResponse
-                {
-                    Id = t.Id,
-                    Guid = t.Guid,
-                    Title = t.Title,
-                    Album = t.Album,
-                    Duration = t.Duration,
-                    Rating = t.Rating,
-                    ReleaseDate = t.ReleaseDate,
-                    IsFavorite = t.IsFavorite,
-                    Genre = t.Genre
-                })
-                .SingleOrDefault();
+            var entity = Query().SingleOrDefault(t => t.Id == id);
+            if (entity == null)
+            {
+                return null;
+            }
+
+            return new TrackResponse
+            {
+                Id = entity.Id,
+                Guid = entity.Guid,
+                Title = entity.Title,
+                Album = entity.Album,
+                Duration = entity.Duration,
+                Rating = entity.Rating,
+                RatingFormatted = entity.Rating.ToString("N1"),
+                ReleaseDate = entity.ReleaseDate,
+                ReleaseDateFormatted = entity.ReleaseDate.ToShortDateString(),
+                IsFavorite = entity.IsFavorite,
+                Genre = entity.Genre
+            };
         }
 
         public TrackRequest Edit(int id)

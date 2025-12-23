@@ -25,6 +25,7 @@ namespace APP.Business.Services
         public List<UserResponse> List()
         {
             return Query()
+                .ToList()
                 .Select(u => new UserResponse
                 {
                     Id = u.Id,
@@ -32,29 +33,34 @@ namespace APP.Business.Services
                     UserName = u.UserName,
                     Email = u.Email,
                     IsActive = u.IsActive,
+                    IsActiveFormatted = u.IsActive ? "Active" : "Passive",
                     BirthDate = u.BirthDate,
+                    BirthDateFormatted = u.BirthDate.ToShortDateString(),
                     GroupId = u.GroupId,
-                    GroupName = u.Group != null ? u.Group.Name : null
+                    GroupName = u.Group?.Name
                 })
                 .ToList();
         }
 
         public UserResponse Item(int id)
         {
-            return Query()
-                .Where(u => u.Id == id)
-                .Select(u => new UserResponse
-                {
-                    Id = u.Id,
-                    Guid = u.Guid,
-                    UserName = u.UserName,
-                    Email = u.Email,
-                    IsActive = u.IsActive,
-                    BirthDate = u.BirthDate,
-                    GroupId = u.GroupId,
-                    GroupName = u.Group != null ? u.Group.Name : null
-                })
-                .SingleOrDefault();
+            var entity = Query().SingleOrDefault(u => u.Id == id);
+            if (entity == null)
+                return null;
+
+            return new UserResponse
+            {
+                Id = entity.Id,
+                Guid = entity.Guid,
+                UserName = entity.UserName,
+                Email = entity.Email,
+                IsActive = entity.IsActive,
+                IsActiveFormatted = entity.IsActive ? "Active" : "Passive",
+                BirthDate = entity.BirthDate,
+                BirthDateFormatted = entity.BirthDate.ToShortDateString(),
+                GroupId = entity.GroupId,
+                GroupName = entity.Group?.Name
+            };
         }
 
         public UserRequest Edit(int id)
@@ -79,9 +85,9 @@ namespace APP.Business.Services
 
         public CommandResponse Create(UserRequest request)
         {
-            if (_db.Users.Any(u => u.Email == request.Email))
+            if (_db.Users.Any(u => u.Email == request.Email || u.UserName == request.UserName))
             {
-                return Error("User with the same e-mail already exists.");
+                return Error("User with the same e-mail or user name already exists.");
             }
 
             var entity = new User
@@ -107,9 +113,9 @@ namespace APP.Business.Services
                 return Error("User not found!");
             }
 
-            if (_db.Users.Any(u => u.Id != request.Id && u.Email == request.Email))
+            if (_db.Users.Any(u => u.Id != request.Id && (u.Email == request.Email || u.UserName == request.UserName)))
             {
-                return Error("User with the same e-mail already exists.");
+                return Error("User with the same e-mail or user name already exists.");
             }
 
             entity.UserName = request.UserName;
@@ -143,6 +149,32 @@ namespace APP.Business.Services
             Delete(entity);
 
             return Success("User deleted successfully.", id);
+        }
+
+        public UserResponse Login(string userName, string password)
+        {
+            var userEntity = Query().SingleOrDefault(u => (u.UserName == userName || u.Email == userName) && u.Password == password && u.IsActive);
+            if (userEntity == null)
+            {
+                return null;
+            }
+
+            return new UserResponse
+            {
+                Id = userEntity.Id,
+                Guid = userEntity.Guid,
+                UserName = userEntity.UserName,
+                Email = userEntity.Email,
+                IsActive = userEntity.IsActive,
+                IsActiveFormatted = userEntity.IsActive ? "Active" : "Passive",
+                BirthDate = userEntity.BirthDate,
+                BirthDateFormatted = userEntity.BirthDate.ToShortDateString(),
+                GroupId = userEntity.GroupId,
+                GroupName = userEntity.Group?.Name,
+                // Add Role info if needed for Claims
+                // Assuming Group acts as Role or separate logic? User entity has Group. Group has name.
+                // We'll use Group Name as Role claim.
+            };
         }
     }
 }

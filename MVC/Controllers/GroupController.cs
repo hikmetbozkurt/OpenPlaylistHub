@@ -1,10 +1,12 @@
 using APP.Business.Services;
 using APP.Models;
 using CORE.APP.Services.MVC;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace MVC.Controllers
 {
+    [Authorize]
     public class GroupController : Controller
     {
         private readonly IService<GroupRequest, GroupResponse> _service;

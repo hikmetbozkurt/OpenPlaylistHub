@@ -27,8 +27,8 @@
             <td>@item.Id</td>
             <td>@item.UserName</td>
             <td>@item.Email</td>
-            <td>@item.IsActive</td>
-            <td>@item.BirthDate.ToShortDateString()</td>
+            <td>@item.IsActiveFormatted</td>
+            <td>@item.BirthDateFormatted</td>
             <td>@item.GroupName</td>
             <td>
                 <a asp-action="Edit" asp-route-id="@item.Id">Edit</a> |

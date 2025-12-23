@@ -9,7 +9,9 @@ namespace APP.Models
         public string UserName { get; set; }
         public string Email { get; set; }
         public bool IsActive { get; set; }
+        public string IsActiveFormatted { get; set; }
         public DateTime BirthDate { get; set; }
+        public string BirthDateFormatted { get; set; }
         public int? GroupId { get; set; }
         public string GroupName { get; set; }
     }

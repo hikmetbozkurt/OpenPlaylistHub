@@ -1,10 +1,17 @@
 using APP.Business.Services;
 using APP.Models;
 using CORE.APP.Services.MVC;
+using Microsoft.AspNetCore.Authentication;
+using Microsoft.AspNetCore.Authentication.Cookies;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using System.Collections.Generic;
+using System.Security.Claims;
+using System.Threading.Tasks;
 
 namespace MVC.Controllers
 {
+    [Authorize]
     public class UserController : Controller
     {
         private readonly IService<UserRequest, UserResponse> _service;
@@ -32,6 +39,7 @@ namespace MVC.Controllers
             return View(user);
         }
 
+        [AllowAnonymous]
         public IActionResult Create()
         {
             ViewBag.Groups = _groupService.List();
@@ -40,6 +48,7 @@ namespace MVC.Controllers
 
         [HttpPost]
         [ValidateAntiForgeryToken]
+        [AllowAnonymous]
         public IActionResult Create(UserRequest request)
         {
             if (ModelState.IsValid)
@@ -47,6 +56,11 @@ namespace MVC.Controllers
                 var response = _service.Create(request);
                 if (response.IsSuccessful)
                 {
+                    // If creating account anonymously, redirect to Login
+                    if (!User.Identity.IsAuthenticated)
+                    {
+                        return RedirectToAction(nameof(Login));
+                    }
                     return RedirectToAction(nameof(Details), new { id = response.Id });
                 }
                 ModelState.AddModelError(string.Empty, response.Message);
@@ -105,6 +119,65 @@ namespace MVC.Controllers
                 return View(user);
             }
             return RedirectToAction(nameof(Index));
+        }
+
+        [AllowAnonymous]
+        public IActionResult Login()
+        {
+            return View();
+        }
+
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        [AllowAnonymous]
+        public async Task<IActionResult> Login(UserRequest request)
+        {
+            var service = _service as UserService;
+            var user = service?.Login(request.UserName, request.Password);
+
+            if (user != null)
+            {
+                string role = user.GroupName ?? "User";
+                if (role.Equals("admin", StringComparison.OrdinalIgnoreCase))
+                {
+                    role = "Admin";
+                }
+
+                var claims = new List<Claim>
+                {
+                    new Claim(ClaimTypes.Name, user.UserName),
+                    new Claim(ClaimTypes.Role, role),
+                    new Claim("Id", user.Id.ToString())
+                };
+
+                var claimsIdentity = new ClaimsIdentity(claims, CookieAuthenticationDefaults.AuthenticationScheme);
+
+                await HttpContext.SignInAsync(CookieAuthenticationDefaults.AuthenticationScheme, new ClaimsPrincipal(claimsIdentity));
+
+                return RedirectToAction("Index", "Home");
+            }
+
+            ModelState.AddModelError("", "Invalid user name or password.");
+            return View();
+        }
+
+        [AllowAnonymous]
+        public IActionResult AccessDenied()
+        {
+            return View();
+        }
+
+        [AllowAnonymous]
+        public async Task<IActionResult> Logout()
+        {
+            await HttpContext.SignOutAsync(CookieAuthenticationDefaults.AuthenticationScheme);
+            return RedirectToAction("Login");
+        }
+
+        private bool IsOwnAccount(int id)
+        {
+            var claimId = User.Claims.FirstOrDefault(c => c.Type == "Id");
+            return claimId != null && claimId.Value == id.ToString();
         }
     }
 }

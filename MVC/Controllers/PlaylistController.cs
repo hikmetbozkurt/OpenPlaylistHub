@@ -2,10 +2,12 @@ using System.Linq;
 using APP.Business.Services;
 using APP.Models;
 using CORE.APP.Services.MVC;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace MVC.Controllers
 {
+    [Authorize]
     public class PlaylistController : Controller
     {
         private readonly IService<PlaylistRequest, PlaylistResponse> _service;

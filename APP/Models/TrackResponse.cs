@@ -11,7 +11,9 @@ namespace APP.Models
         public string Album { get; set; }
         public TimeSpan Duration { get; set; }
         public decimal Rating { get; set; }
+        public string RatingFormatted { get; set; }
         public DateTime ReleaseDate { get; set; }
+        public string ReleaseDateFormatted { get; set; }
         public bool IsFavorite { get; set; }
         public Genre Genre { get; set; }
     }
