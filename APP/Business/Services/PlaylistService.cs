@@ -21,24 +21,67 @@ namespace APP.Business.Services
         protected override IQueryable<Playlist> Query(bool isNoTracking = true)
         {
             return base.Query(isNoTracking)
-                .Include(p => p.User)
-                .Include(p => p.PlaylistTracks)
-                    .ThenInclude(pt => pt.Track);
+                .Include(p => p.OwnerUser)
+                .Include(p => p.PlaylistSongs)
+                    .ThenInclude(ps => ps.Song)
+                    .ThenInclude(s => s.Artist); // Include Artist for song details
         }
 
         public List<PlaylistResponse> List()
         {
             return Query()
-                .Select(ProjectToResponse)
+                .Select(p => new PlaylistResponse
+                {
+                    Id = p.Id,
+                    Guid = p.Guid,
+                    Name = p.Name,
+                    IsPublic = p.IsPublic,
+                    CreatedDate = p.CreatedDate,
+                    OwnerUserId = p.OwnerUserId,
+                    OwnerUserName = p.OwnerUser != null ? p.OwnerUser.UserName : string.Empty,
+                    Songs = p.PlaylistSongs.OrderBy(ps => ps.OrderNo).Select(ps => new SongResponse
+                    {
+                        Id = ps.Song.Id,
+                        Guid = ps.Song.Guid,
+                        Title = ps.Song.Title,
+                        DurationSeconds = ps.Song.DurationSeconds,
+                        // Basic song info for listing
+                        ArtistName = ps.Song.Artist != null ? ps.Song.Artist.FirstName + " " + ps.Song.Artist.LastName : ""
+                    }).ToList()
+                })
                 .OrderByDescending(p => p.CreatedDate)
                 .ToList();
         }
 
         public PlaylistResponse Item(int id)
         {
-            return Query()
+            // Similar projection but maybe more details
+             return Query()
                 .Where(p => p.Id == id)
-                .Select(ProjectToResponse)
+                .Select(p => new PlaylistResponse
+                {
+                    Id = p.Id,
+                    Guid = p.Guid,
+                    Name = p.Name,
+                    IsPublic = p.IsPublic,
+                    CreatedDate = p.CreatedDate,
+                    OwnerUserId = p.OwnerUserId,
+                    OwnerUserName = p.OwnerUser != null ? p.OwnerUser.UserName : string.Empty,
+                    Songs = p.PlaylistSongs.OrderBy(ps => ps.OrderNo).Select(ps => new SongResponse
+                    {
+                        Id = ps.Song.Id,
+                        Guid = ps.Song.Guid,
+                        Title = ps.Song.Title,
+                        DurationSeconds = ps.Song.DurationSeconds,
+                        TotalStreams = ps.Song.TotalStreams,
+                        ReleaseDate = ps.Song.ReleaseDate,
+                        AlbumId = ps.Song.AlbumId,
+                        AlbumTitle = ps.Song.Album != null ? ps.Song.Album.Name : null,
+                        ArtistId = ps.Song.ArtistId,
+                        ArtistName = ps.Song.Artist != null ? ps.Song.Artist.FirstName + " " + ps.Song.Artist.LastName : "",
+                        // Note: AverageRating and GenreNames might require more includes or separate logic if needed here
+                    }).ToList()
+                })
                 .SingleOrDefault();
         }
 
@@ -54,16 +97,15 @@ namespace APP.Business.Services
             {
                 Id = playlist.Id,
                 Name = playlist.Name,
-                Description = playlist.Description,
                 IsPublic = playlist.IsPublic,
-                CreatedDate = playlist.CreatedDate,
-                UserId = playlist.UserId
+                OwnerUserId = playlist.OwnerUserId,
+                SongIds = playlist.PlaylistSongs.Select(ps => ps.SongId).ToList()
             };
         }
 
         public CommandResponse Create(PlaylistRequest request)
         {
-            if (!_db.Users.Any(u => u.Id == request.UserId))
+            if (!_db.Users.Any(u => u.Id == request.OwnerUserId))
             {
                 return Error("Playlist owner was not found.");
             }
@@ -71,13 +113,30 @@ namespace APP.Business.Services
             var entity = new Playlist
             {
                 Name = request.Name,
-                Description = request.Description,
                 IsPublic = request.IsPublic,
-                CreatedDate = request.CreatedDate == default ? DateTime.UtcNow : request.CreatedDate,
-                UserId = request.UserId
+                CreatedDate = DateTime.UtcNow,
+                OwnerUserId = request.OwnerUserId
             };
 
             Create(entity);
+
+             if (request.SongIds != null && request.SongIds.Any())
+            {
+                short order = 1;
+                foreach (var songId in request.SongIds)
+                {
+                     if (_db.Songs.Any(s => s.Id == songId))
+                     {
+                         _db.PlaylistSongs.Add(new PlaylistSong
+                         {
+                             PlaylistId = entity.Id,
+                             SongId = songId,
+                             OrderNo = order++
+                         });
+                     }
+                }
+                SaveChanges();
+            }
 
             return Success("Playlist created successfully.", entity.Id);
         }
@@ -91,12 +150,32 @@ namespace APP.Business.Services
             }
 
             entity.Name = request.Name;
-            entity.Description = request.Description;
             entity.IsPublic = request.IsPublic;
-            entity.CreatedDate = request.CreatedDate;
-            entity.UserId = request.UserId;
+            entity.OwnerUserId = request.OwnerUserId;
+
+            // Handle Song updates (Full replacement or additive? Ususally full replacement if list provided)
+            // Existing logic didn't handle update of tracks inside Update method, only Edit provided Ids.
+            // But typical edit flow might want to update list.
+            
+            var existingSongs = _db.PlaylistSongs.Where(ps => ps.PlaylistId == entity.Id).ToList();
+            _db.PlaylistSongs.RemoveRange(existingSongs);
+
+            if (request.SongIds != null && request.SongIds.Any())
+            {
+                short order = 1;
+                foreach (var songId in request.SongIds)
+                {
+                    _db.PlaylistSongs.Add(new PlaylistSong
+                    {
+                        PlaylistId = entity.Id,
+                        SongId = songId,
+                        OrderNo = order++
+                    });
+                }
+            }
 
             Update(entity);
+            SaveChanges();
 
             return Success("Playlist updated successfully.", entity.Id);
         }
@@ -104,16 +183,16 @@ namespace APP.Business.Services
         public CommandResponse Delete(int id)
         {
             var entity = Query(false)
-                .Include(p => p.PlaylistTracks)
+                .Include(p => p.PlaylistSongs)
                 .SingleOrDefault(p => p.Id == id);
             if (entity == null)
             {
                 return Error("Playlist not found!");
             }
 
-            if (entity.PlaylistTracks?.Any() == true)
+            if (entity.PlaylistSongs?.Any() == true)
             {
-                _db.PlaylistTracks.RemoveRange(entity.PlaylistTracks);
+                _db.PlaylistSongs.RemoveRange(entity.PlaylistSongs);
             }
 
             Delete(entity);
@@ -121,82 +200,51 @@ namespace APP.Business.Services
             return Success("Playlist deleted successfully.", id);
         }
 
-        public CommandResponse AddTrackToPlaylist(int playlistId, int trackId)
+        public CommandResponse AddSongToPlaylist(int playlistId, int songId)
         {
             var playlist = Query(false)
-                .Include(p => p.PlaylistTracks)
+                .Include(p => p.PlaylistSongs)
                 .SingleOrDefault(p => p.Id == playlistId);
             if (playlist == null)
             {
                 return Error("Playlist not found!");
             }
 
-            if (_db.PlaylistTracks.Any(pt => pt.PlaylistId == playlistId && pt.TrackId == trackId))
+            if (_db.PlaylistSongs.Any(ps => ps.PlaylistId == playlistId && ps.SongId == songId))
             {
-                return Error("Track already exists in the playlist.");
+                return Error("Song already exists in the playlist.");
             }
 
-            var order = playlist.PlaylistTracks
-                .Select(pt => pt.Order)
-                .DefaultIfEmpty(0)
-                .Max() + 1;
+            var order = (short)((playlist.PlaylistSongs
+                .Select(ps => ps.OrderNo)
+                .Max() ?? 0) + 1);
 
-            var playlistTrack = new PlaylistTrack
+            var playlistSong = new PlaylistSong
             {
                 PlaylistId = playlistId,
-                TrackId = trackId,
-                Order = order
+                SongId = songId,
+                OrderNo = order
             };
 
-            _db.PlaylistTracks.Add(playlistTrack);
+            _db.PlaylistSongs.Add(playlistSong);
             _db.SaveChanges();
 
-            return Success("Track added to playlist.", playlistId);
+            return Success("Song added to playlist.", playlistId);
         }
 
-        public CommandResponse RemoveTrackFromPlaylist(int playlistId, int trackId)
+        public CommandResponse RemoveSongFromPlaylist(int playlistId, int songId)
         {
-            var playlistTrack = _db.PlaylistTracks
-                .FirstOrDefault(pt => pt.PlaylistId == playlistId && pt.TrackId == trackId);
-            if (playlistTrack == null)
+            var playlistSong = _db.PlaylistSongs
+                .FirstOrDefault(ps => ps.PlaylistId == playlistId && ps.SongId == songId);
+            if (playlistSong == null)
             {
-                return Error("Track relationship not found!");
+                return Error("Song not found in playlist!");
             }
 
-            _db.PlaylistTracks.Remove(playlistTrack);
+            _db.PlaylistSongs.Remove(playlistSong);
             _db.SaveChanges();
 
-            return Success("Track removed from playlist.", playlistId);
-        }
-
-        private static PlaylistResponse ProjectToResponse(Playlist playlist)
-        {
-            return new PlaylistResponse
-            {
-                Id = playlist.Id,
-                Guid = playlist.Guid,
-                Name = playlist.Name,
-                Description = playlist.Description,
-                IsPublic = playlist.IsPublic,
-                CreatedDate = playlist.CreatedDate,
-                UserId = playlist.UserId,
-                UserName = playlist.User?.UserName,
-                Tracks = playlist.PlaylistTracks
-                    .OrderBy(pt => pt.Order)
-                    .Select(pt => new TrackResponse
-                    {
-                        Id = pt.Track.Id,
-                        Guid = pt.Track.Guid,
-                        Title = pt.Track.Title,
-                        Album = pt.Track.Album,
-                        Duration = pt.Track.Duration,
-                        Rating = pt.Track.Rating,
-                        ReleaseDate = pt.Track.ReleaseDate,
-                        IsFavorite = pt.Track.IsFavorite,
-                        Genre = pt.Track.Genre
-                    })
-                    .ToList()
-            };
+            return Success("Song removed from playlist.", playlistId);
         }
     }
 }

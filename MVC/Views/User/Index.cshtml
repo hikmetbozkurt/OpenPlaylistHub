@@ -14,10 +14,9 @@
         <tr>
             <th>Id</th>
             <th>User Name</th>
-            <th>Email</th>
             <th>Is Active</th>
             <th>Birth Date</th>
-            <th>Group</th>
+
             <th></th>
         </tr>
     </thead>
@@ -26,10 +25,9 @@
         <tr>
             <td>@item.Id</td>
             <td>@item.UserName</td>
-            <td>@item.Email</td>
             <td>@item.IsActiveFormatted</td>
             <td>@item.BirthDateFormatted</td>
-            <td>@item.GroupName</td>
+
             <td>
                 <a asp-action="Edit" asp-route-id="@item.Id">Edit</a> |
                 <a asp-action="Details" asp-route-id="@item.Id">Details</a> |

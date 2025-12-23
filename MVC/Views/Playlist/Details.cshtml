@@ -28,12 +28,6 @@
             @Html.DisplayFor(model => model.Name)
         </dd>
         <dt class="col-sm-2">
-            @Html.DisplayNameFor(model => model.Description)
-        </dt>
-        <dd class="col-sm-10">
-            @Html.DisplayFor(model => model.Description)
-        </dd>
-        <dt class="col-sm-2">
             @Html.DisplayNameFor(model => model.IsPublic)
         </dt>
         <dd class="col-sm-10">
@@ -46,47 +40,45 @@
             @Html.DisplayFor(model => model.CreatedDate)
         </dd>
         <dt class="col-sm-2">
-            @Html.DisplayNameFor(model => model.UserName)
+            @Html.DisplayNameFor(model => model.OwnerUserName)
         </dt>
         <dd class="col-sm-10">
-            @Html.DisplayFor(model => model.UserName)
+            @Html.DisplayFor(model => model.OwnerUserName)
         </dd>
     </dl>
 </div>
 
 <div>
-    <h4>Tracks</h4>
+    <h4>Songs</h4>
     <p>
-        <a asp-action="AddTrack" asp-route-id="@Model.Id">Add Track</a>
+        <a asp-action="AddSong" asp-route-id="@Model.Id">Add Song</a>
     </p>
     <table class="table">
         <thead>
             <tr>
                 <th>Title</th>
-                <th>Album</th>
+                <th>Artist</th>
                 <th>Duration</th>
                 <th>Rating</th>
                 <th>Release Date</th>
                 <th>Genre</th>
-                <th>Is Favorite</th>
                 <th></th>
             </tr>
         </thead>
         <tbody>
-            @foreach (var track in Model.Tracks)
+            @foreach (var song in Model.Songs)
             {
                 <tr>
-                    <td>@track.Title</td>
-                    <td>@track.Album</td>
-                    <td>@track.Duration.ToString(@"mm\:ss")</td>
-                    <td>@track.Rating</td>
-                    <td>@track.ReleaseDate.ToShortDateString()</td>
-                    <td>@track.Genre</td>
-                    <td>@track.IsFavorite</td>
+                    <td>@song.Title</td>
+                    <td>@song.ArtistName</td>
+                    <td>@(song.DurationSeconds.HasValue ? TimeSpan.FromSeconds(song.DurationSeconds.Value).ToString(@"mm\:ss") : "-")</td>
+                    <td>@song.AverageRating</td>
+                    <td>@(song.ReleaseDate.HasValue ? song.ReleaseDate.Value.ToShortDateString() : "-")</td>
+                    <td>@song.GenreNames</td>
                     <td>
-                        <form asp-action="RemoveTrack" method="post">
+                        <form asp-action="RemoveSong" method="post">
                             <input type="hidden" name="playlistId" value="@Model.Id" />
-                            <input type="hidden" name="trackId" value="@track.Id" />
+                            <input type="hidden" name="songId" value="@song.Id" />
                             <input type="submit" value="Remove" class="btn btn-danger btn-sm" />
                         </form>
                     </td>

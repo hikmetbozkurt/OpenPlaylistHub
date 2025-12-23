@@ -19,7 +19,7 @@ namespace APP.Business.Services
 
         protected override IQueryable<User> Query(bool isNoTracking = true)
         {
-            return base.Query(isNoTracking).Include(u => u.Group);
+            return base.Query(isNoTracking);
         }
 
         public List<UserResponse> List()
@@ -31,13 +31,13 @@ namespace APP.Business.Services
                     Id = u.Id,
                     Guid = u.Guid,
                     UserName = u.UserName,
-                    Email = u.Email,
+                    FirstName = u.FirstName,
+                    LastName = u.LastName,
+                    Gender = u.Gender.ToString(),
                     IsActive = u.IsActive,
                     IsActiveFormatted = u.IsActive ? "Active" : "Passive",
                     BirthDate = u.BirthDate,
-                    BirthDateFormatted = u.BirthDate.ToShortDateString(),
-                    GroupId = u.GroupId,
-                    GroupName = u.Group?.Name
+                    BirthDateFormatted = u.BirthDate.HasValue ? u.BirthDate.Value.ToShortDateString() : string.Empty
                 })
                 .ToList();
         }
@@ -53,13 +53,13 @@ namespace APP.Business.Services
                 Id = entity.Id,
                 Guid = entity.Guid,
                 UserName = entity.UserName,
-                Email = entity.Email,
+                FirstName = entity.FirstName,
+                LastName = entity.LastName,
+                Gender = entity.Gender.ToString(),
                 IsActive = entity.IsActive,
                 IsActiveFormatted = entity.IsActive ? "Active" : "Passive",
                 BirthDate = entity.BirthDate,
-                BirthDateFormatted = entity.BirthDate.ToShortDateString(),
-                GroupId = entity.GroupId,
-                GroupName = entity.Group?.Name
+                BirthDateFormatted = entity.BirthDate.HasValue ? entity.BirthDate.Value.ToShortDateString() : string.Empty
             };
         }
 
@@ -75,29 +75,34 @@ namespace APP.Business.Services
             {
                 Id = user.Id,
                 UserName = user.UserName,
-                Email = user.Email,
+                FirstName = user.FirstName,
+                LastName = user.LastName,
+                Gender = user.Gender,
                 Password = string.Empty,
                 IsActive = user.IsActive,
-                BirthDate = user.BirthDate,
-                GroupId = user.GroupId
+                BirthDate = user.BirthDate
             };
         }
 
         public CommandResponse Create(UserRequest request)
         {
-            if (_db.Users.Any(u => u.Email == request.Email || u.UserName == request.UserName))
+            // Email check removed
+            if (_db.Users.Any(u => u.UserName == request.UserName))
             {
-                return Error("User with the same e-mail or user name already exists.");
+                return Error("User with the same user name already exists.");
             }
 
             var entity = new User
             {
                 UserName = request.UserName,
-                Email = request.Email,
-                Password = request.Password,
+                FirstName = request.FirstName,
+                LastName = request.LastName,
+                Gender = request.Gender,
+                // Email removed
+                Password = request.Password, // Should be hashed in real app
                 IsActive = request.IsActive,
-                BirthDate = request.BirthDate,
-                GroupId = request.GroupId
+                RegistrationDate = DateTime.Now,
+                BirthDate = request.BirthDate
             };
 
             Create(entity);
@@ -113,20 +118,22 @@ namespace APP.Business.Services
                 return Error("User not found!");
             }
 
-            if (_db.Users.Any(u => u.Id != request.Id && (u.Email == request.Email || u.UserName == request.UserName)))
+            if (_db.Users.Any(u => u.Id != request.Id && u.UserName == request.UserName))
             {
-                return Error("User with the same e-mail or user name already exists.");
+                return Error("User with the same user name already exists.");
             }
 
             entity.UserName = request.UserName;
-            entity.Email = request.Email;
+            entity.FirstName = request.FirstName;
+            entity.LastName = request.LastName;
+            entity.Gender = request.Gender;
+            
             if (!string.IsNullOrWhiteSpace(request.Password))
             {
                 entity.Password = request.Password;
             }
             entity.IsActive = request.IsActive;
             entity.BirthDate = request.BirthDate;
-            entity.GroupId = request.GroupId;
 
             Update(entity);
 
@@ -135,15 +142,36 @@ namespace APP.Business.Services
 
         public CommandResponse Delete(int id)
         {
-            var entity = Query(false).Include(u => u.Playlists).SingleOrDefault(u => u.Id == id);
+            // Include related entities to check or cascade
+            // User now has PlaylistMembers, SongRatings, UserRoles
+            var entity = Query(false)
+                .Include(u => u.Playlists) // Owned playlists
+                .Include(u => u.PlaylistMembers)
+                .Include(u => u.SongRatings)
+                .Include(u => u.UserRoles)
+                .SingleOrDefault(u => u.Id == id);
+
             if (entity == null)
             {
                 return Error("User not found!");
             }
 
+            // Explicitly remove related data if not cascade delete
             if (entity.Playlists?.Any() == true)
             {
                 _db.Playlists.RemoveRange(entity.Playlists);
+            }
+             if (entity.PlaylistMembers?.Any() == true)
+            {
+                _db.PlaylistMembers.RemoveRange(entity.PlaylistMembers);
+            }
+             if (entity.SongRatings?.Any() == true)
+            {
+                _db.SongRatings.RemoveRange(entity.SongRatings);
+            }
+             if (entity.UserRoles?.Any() == true)
+            {
+                _db.UserRoles.RemoveRange(entity.UserRoles);
             }
 
             Delete(entity);
@@ -153,7 +181,8 @@ namespace APP.Business.Services
 
         public UserResponse Login(string userName, string password)
         {
-            var userEntity = Query().SingleOrDefault(u => (u.UserName == userName || u.Email == userName) && u.Password == password && u.IsActive);
+            // Login with UserName only, no Email
+            var userEntity = Query().SingleOrDefault(u => u.UserName == userName && u.Password == password && u.IsActive);
             if (userEntity == null)
             {
                 return null;
@@ -164,16 +193,13 @@ namespace APP.Business.Services
                 Id = userEntity.Id,
                 Guid = userEntity.Guid,
                 UserName = userEntity.UserName,
-                Email = userEntity.Email,
+                FirstName = userEntity.FirstName,
+                LastName = userEntity.LastName,
+                Gender = userEntity.Gender.ToString(),
                 IsActive = userEntity.IsActive,
                 IsActiveFormatted = userEntity.IsActive ? "Active" : "Passive",
                 BirthDate = userEntity.BirthDate,
-                BirthDateFormatted = userEntity.BirthDate.ToShortDateString(),
-                GroupId = userEntity.GroupId,
-                GroupName = userEntity.Group?.Name,
-                // Add Role info if needed for Claims
-                // Assuming Group acts as Role or separate logic? User entity has Group. Group has name.
-                // We'll use Group Name as Role claim.
+                BirthDateFormatted = userEntity.BirthDate.HasValue ? userEntity.BirthDate.Value.ToShortDateString() : string.Empty
             };
         }
     }

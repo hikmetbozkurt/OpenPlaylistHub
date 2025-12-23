@@ -24,8 +24,7 @@ namespace APP.Business.Services
                 {
                     Id = g.Id,
                     Guid = g.Guid,
-                    Name = g.Name,
-                    Description = g.Description
+                    Title = g.Title
                 })
                 .ToList();
         }
@@ -38,8 +37,7 @@ namespace APP.Business.Services
                 {
                     Id = g.Id,
                     Guid = g.Guid,
-                    Name = g.Name,
-                    Description = g.Description
+                    Title = g.Title
                 })
                 .SingleOrDefault();
         }
@@ -55,22 +53,20 @@ namespace APP.Business.Services
             return new GroupRequest
             {
                 Id = group.Id,
-                Name = group.Name,
-                Description = group.Description
+                Title = group.Title
             };
         }
 
         public CommandResponse Create(GroupRequest request)
         {
-            if (_db.Groups.Any(g => g.Name == request.Name))
+            if (_db.Groups.Any(g => g.Title == request.Title))
             {
-                return Error("Group with the same name already exists.");
+                return Error("Group with the same title already exists.");
             }
 
             var entity = new Group
             {
-                Name = request.Name,
-                Description = request.Description
+                Title = request.Title
             };
 
             Create(entity);
@@ -86,13 +82,12 @@ namespace APP.Business.Services
                 return Error("Group not found!");
             }
 
-            if (_db.Groups.Any(g => g.Id != request.Id && g.Name == request.Name))
+            if (_db.Groups.Any(g => g.Id != request.Id && g.Title == request.Title))
             {
-                return Error("Group with the same name already exists.");
+                return Error("Group with the same title already exists.");
             }
 
-            entity.Name = request.Name;
-            entity.Description = request.Description;
+            entity.Title = request.Title;
 
             Update(entity);
 
@@ -101,10 +96,7 @@ namespace APP.Business.Services
 
         public CommandResponse Delete(int id)
         {
-            if (_db.Users.Any(u => u.GroupId == id))
-            {
-                return Error("Group cannot be deleted while it is assigned to users.");
-            }
+
 
             var entity = Query(false).FirstOrDefault(g => g.Id == id);
             if (entity == null)

@@ -15,7 +15,12 @@ builder.Services.AddScoped<IService<UserRequest, UserResponse>, UserService>();
 builder.Services.AddScoped<IService<GroupRequest, GroupResponse>, GroupService>();
 builder.Services.AddScoped<IService<RoleRequest, RoleResponse>, RoleService>();
 builder.Services.AddScoped<IService<PlaylistRequest, PlaylistResponse>, PlaylistService>();
-builder.Services.AddScoped<IService<TrackRequest, TrackResponse>, TrackService>();
+builder.Services.AddScoped<PlaylistService>();
+builder.Services.AddScoped<IService<SongRequest, SongResponse>, SongService>();
+builder.Services.AddScoped<SongService>();
+builder.Services.AddScoped<IService<ArtistRequest, ArtistResponse>, ArtistService>();
+builder.Services.AddScoped<IService<AlbumRequest, AlbumResponse>, AlbumService>();
+builder.Services.AddScoped<IService<GenreRequest, GenreResponse>, GenreService>();
 
 builder.Services.AddAuthentication(Microsoft.AspNetCore.Authentication.Cookies.CookieAuthenticationDefaults.AuthenticationScheme)
     .AddCookie(options =>

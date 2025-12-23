@@ -12,18 +12,18 @@ namespace MVC.Controllers
     {
         private readonly IService<PlaylistRequest, PlaylistResponse> _service;
         private readonly IService<UserRequest, UserResponse> _userService;
-        private readonly IService<TrackRequest, TrackResponse> _trackService;
+        private readonly IService<SongRequest, SongResponse> _songService;
         private readonly PlaylistService _playlistService;
 
         public PlaylistController(
             IService<PlaylistRequest, PlaylistResponse> service,
             IService<UserRequest, UserResponse> userService,
-            IService<TrackRequest, TrackResponse> trackService,
+            IService<SongRequest, SongResponse> songService,
             PlaylistService playlistService)
         {
             _service = service;
             _userService = userService;
-            _trackService = trackService;
+            _songService = songService;
             _playlistService = playlistService;
         }
 
@@ -55,7 +55,7 @@ namespace MVC.Controllers
         {
             if (ModelState.IsValid)
             {
-                request.CreatedDate = DateTime.Now;
+
                 var response = _service.Create(request);
                 if (response.IsSuccessful)
                 {
@@ -119,7 +119,7 @@ namespace MVC.Controllers
             return RedirectToAction(nameof(Index));
         }
 
-        public IActionResult AddTrack(int id)
+        public IActionResult AddSong(int id)
         {
             var playlist = _service.Item(id);
             if (playlist == null)
@@ -127,17 +127,17 @@ namespace MVC.Controllers
                 return NotFound();
             }
             ViewBag.Playlist = playlist;
-            var allTracks = _trackService.List();
-            var playlistTrackIds = playlist.Tracks.Select(t => t.Id).ToList();
-            ViewBag.Tracks = allTracks.Where(t => !playlistTrackIds.Contains(t.Id)).ToList();
+            var allSongs = _songService.List();
+            var playlistSongIds = playlist.Songs.Select(t => t.Id).ToList();
+            ViewBag.Songs = allSongs.Where(t => !playlistSongIds.Contains(t.Id)).ToList();
             return View();
         }
 
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public IActionResult AddTrack(int playlistId, int trackId)
+        public IActionResult AddSong(int playlistId, int songId)
         {
-            var response = _playlistService.AddTrackToPlaylist(playlistId, trackId);
+            var response = _playlistService.AddSongToPlaylist(playlistId, songId);
             if (!response.IsSuccessful)
             {
                 TempData["Message"] = response.Message;
@@ -147,9 +147,9 @@ namespace MVC.Controllers
 
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public IActionResult RemoveTrack(int playlistId, int trackId)
+        public IActionResult RemoveSong(int playlistId, int songId)
         {
-            var response = _playlistService.RemoveTrackFromPlaylist(playlistId, trackId);
+            var response = _playlistService.RemoveSongFromPlaylist(playlistId, songId);
             if (!response.IsSuccessful)
             {
                 TempData["Message"] = response.Message;

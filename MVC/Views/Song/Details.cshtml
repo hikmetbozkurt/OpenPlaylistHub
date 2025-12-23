@@ -1,0 +1,79 @@
+@model SongResponse
+
+@{
+    ViewData["Title"] = "Song Details";
+}
+
+@if (TempData["Message"] is string message && !string.IsNullOrWhiteSpace(message))
+{
+    <div class="alert alert-warning">@message</div>
+}
+
+<h1>Song Details</h1>
+
+<div>
+    <h4>Song</h4>
+    <hr />
+    <dl class="row">
+        <dt class="col-sm-2">
+            @Html.DisplayNameFor(model => model.Id)
+        </dt>
+        <dd class="col-sm-10">
+            @Html.DisplayFor(model => model.Id)
+        </dd>
+        <dt class="col-sm-2">
+            Title
+        </dt>
+        <dd class="col-sm-10">
+            @Html.DisplayFor(model => model.Title)
+        </dd>
+        <dt class="col-sm-2">
+            Album
+        </dt>
+        <dd class="col-sm-10">
+            @Html.DisplayFor(model => model.AlbumTitle)
+        </dd>
+        <dt class="col-sm-2">
+            Duration
+        </dt>
+        <dd class="col-sm-10">
+            @(Model.DurationSeconds.HasValue ? TimeSpan.FromSeconds(Model.DurationSeconds.Value).ToString(@"mm\:ss") : "-")
+        </dd>
+        <dt class="col-sm-2">
+            Rating
+        </dt>
+        <dd class="col-sm-10">
+            @Html.DisplayFor(model => model.AverageRating)
+        </dd>
+        <dt class="col-sm-2">
+            Artist
+        </dt>
+        <dd class="col-sm-10">
+            @Html.DisplayFor(model => model.ArtistName)
+        </dd>
+        <dt class="col-sm-2">
+            Total Streams
+        </dt>
+        <dd class="col-sm-10">
+            @Html.DisplayFor(model => model.TotalStreams)
+        </dd>
+        <dt class="col-sm-2">
+            Release Date
+        </dt>
+        <dd class="col-sm-10">
+             @(Model.ReleaseDate.HasValue ? Model.ReleaseDate.Value.ToShortDateString() : "-")
+        </dd>
+        <dt class="col-sm-2">
+            Genres
+        </dt>
+        <dd class="col-sm-10">
+            @Html.DisplayFor(model => model.GenreNames)
+        </dd>
+    </dl>
+</div>
+
+<div>
+    <a asp-action="Edit" asp-route-id="@Model.Id">Edit</a> |
+    <a asp-action="Index">Back to List</a>
+</div>
+

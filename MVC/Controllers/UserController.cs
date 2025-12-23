@@ -15,12 +15,10 @@ namespace MVC.Controllers
     public class UserController : Controller
     {
         private readonly IService<UserRequest, UserResponse> _service;
-        private readonly IService<GroupRequest, GroupResponse> _groupService;
 
-        public UserController(IService<UserRequest, UserResponse> service, IService<GroupRequest, GroupResponse> groupService)
+        public UserController(IService<UserRequest, UserResponse> service)
         {
             _service = service;
-            _groupService = groupService;
         }
 
         public IActionResult Index()
@@ -42,7 +40,7 @@ namespace MVC.Controllers
         [AllowAnonymous]
         public IActionResult Create()
         {
-            ViewBag.Groups = _groupService.List();
+
             return View();
         }
 
@@ -57,7 +55,7 @@ namespace MVC.Controllers
                 if (response.IsSuccessful)
                 {
                     // If creating account anonymously, redirect to Login
-                    if (!User.Identity.IsAuthenticated)
+                    if (User.Identity?.IsAuthenticated != true)
                     {
                         return RedirectToAction(nameof(Login));
                     }
@@ -65,7 +63,7 @@ namespace MVC.Controllers
                 }
                 ModelState.AddModelError(string.Empty, response.Message);
             }
-            ViewBag.Groups = _groupService.List();
+
             return View(request);
         }
 
@@ -76,7 +74,7 @@ namespace MVC.Controllers
             {
                 return NotFound();
             }
-            ViewBag.Groups = _groupService.List();
+
             return View(request);
         }
 
@@ -93,7 +91,7 @@ namespace MVC.Controllers
                 }
                 ModelState.AddModelError(string.Empty, response.Message);
             }
-            ViewBag.Groups = _groupService.List();
+
             return View(request);
         }
 
@@ -137,11 +135,7 @@ namespace MVC.Controllers
 
             if (user != null)
             {
-                string role = user.GroupName ?? "User";
-                if (role.Equals("admin", StringComparison.OrdinalIgnoreCase))
-                {
-                    role = "Admin";
-                }
+                string role = "User"; // Default or manage via UserRoles logic if needed now that Group is gone
 
                 var claims = new List<Claim>
                 {

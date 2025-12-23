@@ -15,7 +15,34 @@ namespace APP.Migrations
         protected override void BuildModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
-            modelBuilder.HasAnnotation("ProductVersion", "7.0.10");
+            modelBuilder.HasAnnotation("ProductVersion", "8.0.0");
+
+            modelBuilder.Entity("APP.DataAccess.Entities.Album", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("INTEGER");
+
+                    b.Property<int>("ArtistId")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<string>("Guid")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateTime>("ReleaseDate")
+                        .HasColumnType("TEXT");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("ArtistId");
+
+                    b.ToTable("Albums");
+                });
 
             modelBuilder.Entity("APP.DataAccess.Entities.Artist", b =>
                 {
@@ -23,13 +50,33 @@ namespace APP.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("INTEGER");
 
+                    b.Property<string>("FirstName")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
                     b.Property<string>("Guid")
+                        .IsRequired()
                         .HasColumnType("TEXT");
 
-                    b.Property<DateTime?>("BirthDate")
+                    b.Property<bool>("IsBand")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<string>("LastName")
+                        .IsRequired()
                         .HasColumnType("TEXT");
 
-                    b.Property<string>("Country")
+                    b.HasKey("Id");
+
+                    b.ToTable("Artists");
+                });
+
+            modelBuilder.Entity("APP.DataAccess.Entities.Genre", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("INTEGER");
+
+                    b.Property<string>("Guid")
                         .IsRequired()
                         .HasColumnType("TEXT");
 
@@ -39,7 +86,7 @@ namespace APP.Migrations
 
                     b.HasKey("Id");
 
-                    b.ToTable("Artists");
+                    b.ToTable("Genres");
                 });
 
             modelBuilder.Entity("APP.DataAccess.Entities.Group", b =>
@@ -49,13 +96,10 @@ namespace APP.Migrations
                         .HasColumnType("INTEGER");
 
                     b.Property<string>("Guid")
-                        .HasColumnType("TEXT");
-
-                    b.Property<string>("Description")
                         .IsRequired()
                         .HasColumnType("TEXT");
 
-                    b.Property<string>("Name")
+                    b.Property<string>("Title")
                         .IsRequired()
                         .HasColumnType("TEXT");
 
@@ -70,13 +114,10 @@ namespace APP.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("INTEGER");
 
-                    b.Property<string>("Guid")
-                        .HasColumnType("TEXT");
-
                     b.Property<DateTime>("CreatedDate")
                         .HasColumnType("TEXT");
 
-                    b.Property<string>("Description")
+                    b.Property<string>("Guid")
                         .IsRequired()
                         .HasColumnType("TEXT");
 
@@ -87,32 +128,50 @@ namespace APP.Migrations
                         .IsRequired()
                         .HasColumnType("TEXT");
 
-                    b.Property<int>("UserId")
+                    b.Property<int>("OwnerUserId")
                         .HasColumnType("INTEGER");
 
                     b.HasKey("Id");
 
-                    b.HasIndex("UserId");
+                    b.HasIndex("OwnerUserId");
 
                     b.ToTable("Playlists");
                 });
 
-            modelBuilder.Entity("APP.DataAccess.Entities.PlaylistTrack", b =>
+            modelBuilder.Entity("APP.DataAccess.Entities.PlaylistMember", b =>
                 {
                     b.Property<int>("PlaylistId")
                         .HasColumnType("INTEGER");
 
-                    b.Property<int>("TrackId")
+                    b.Property<int>("UserId")
                         .HasColumnType("INTEGER");
 
-                    b.Property<int>("Order")
+                    b.Property<bool>("IsEditor")
                         .HasColumnType("INTEGER");
 
-                    b.HasKey("PlaylistId", "TrackId");
+                    b.HasKey("PlaylistId", "UserId");
 
-                    b.HasIndex("TrackId");
+                    b.HasIndex("UserId");
 
-                    b.ToTable("PlaylistTracks");
+                    b.ToTable("PlaylistMembers");
+                });
+
+            modelBuilder.Entity("APP.DataAccess.Entities.PlaylistSong", b =>
+                {
+                    b.Property<int>("PlaylistId")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<int>("SongId")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<short?>("OrderNo")
+                        .HasColumnType("INTEGER");
+
+                    b.HasKey("PlaylistId", "SongId");
+
+                    b.HasIndex("SongId");
+
+                    b.ToTable("PlaylistSongs");
                 });
 
             modelBuilder.Entity("APP.DataAccess.Entities.Role", b =>
@@ -122,9 +181,6 @@ namespace APP.Migrations
                         .HasColumnType("INTEGER");
 
                     b.Property<string>("Guid")
-                        .HasColumnType("TEXT");
-
-                    b.Property<string>("Description")
                         .IsRequired()
                         .HasColumnType("TEXT");
 
@@ -137,51 +193,78 @@ namespace APP.Migrations
                     b.ToTable("Roles");
                 });
 
-            modelBuilder.Entity("APP.DataAccess.Entities.Track", b =>
+            modelBuilder.Entity("APP.DataAccess.Entities.Song", b =>
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("INTEGER");
 
-                    b.Property<string>("Guid")
-                        .HasColumnType("TEXT");
+                    b.Property<int?>("AlbumId")
+                        .HasColumnType("INTEGER");
 
-                    b.Property<string>("Album")
+                    b.Property<int>("ArtistId")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<int?>("DurationSeconds")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<string>("Guid")
                         .IsRequired()
                         .HasColumnType("TEXT");
 
-                    b.Property<int>("DurationSeconds")
-                        .HasColumnType("INTEGER");
-
-                    b.Property<bool>("IsExplicit")
-                        .HasColumnType("INTEGER");
-
-                    b.Property<decimal>("Rating")
-                        .HasColumnType("TEXT");
-
-                    b.Property<DateTime>("ReleaseDate")
+                    b.Property<DateTime?>("ReleaseDate")
                         .HasColumnType("TEXT");
 
                     b.Property<string>("Title")
                         .IsRequired()
                         .HasColumnType("TEXT");
 
+                    b.Property<int?>("TotalStreams")
+                        .HasColumnType("INTEGER");
+
                     b.HasKey("Id");
 
-                    b.ToTable("Tracks");
+                    b.HasIndex("AlbumId");
+
+                    b.HasIndex("ArtistId");
+
+                    b.ToTable("Songs");
                 });
 
-            modelBuilder.Entity("APP.DataAccess.Entities.TrackArtist", b =>
+            modelBuilder.Entity("APP.DataAccess.Entities.SongGenre", b =>
                 {
-                    b.Property<int>("TrackId")
+                    b.Property<int>("SongId")
                         .HasColumnType("INTEGER");
 
-                    b.Property<int>("ArtistId")
+                    b.Property<int>("GenreId")
                         .HasColumnType("INTEGER");
 
-                    b.HasKey("TrackId", "ArtistId");
+                    b.HasKey("SongId", "GenreId");
 
-                    b.ToTable("TrackArtists");
+                    b.HasIndex("GenreId");
+
+                    b.ToTable("SongGenres");
+                });
+
+            modelBuilder.Entity("APP.DataAccess.Entities.SongRating", b =>
+                {
+                    b.Property<int>("SongId")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<int>("UserId")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<DateTime>("RatedAt")
+                        .HasColumnType("TEXT");
+
+                    b.Property<byte>("Rating")
+                        .HasColumnType("INTEGER");
+
+                    b.HasKey("SongId", "UserId");
+
+                    b.HasIndex("UserId");
+
+                    b.ToTable("SongRatings");
                 });
 
             modelBuilder.Entity("APP.DataAccess.Entities.User", b =>
@@ -190,24 +273,32 @@ namespace APP.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("INTEGER");
 
-                    b.Property<string>("Guid")
+                    b.Property<DateTime?>("BirthDate")
                         .HasColumnType("TEXT");
 
-                    b.Property<DateTime>("BirthDate")
-                        .HasColumnType("TEXT");
-
-                    b.Property<string>("Email")
+                    b.Property<string>("FirstName")
                         .IsRequired()
                         .HasColumnType("TEXT");
 
-                    b.Property<int?>("GroupId")
+                    b.Property<int>("Gender")
                         .HasColumnType("INTEGER");
+
+                    b.Property<string>("Guid")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
 
                     b.Property<bool>("IsActive")
                         .HasColumnType("INTEGER");
 
+                    b.Property<string>("LastName")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
                     b.Property<string>("Password")
                         .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateTime>("RegistrationDate")
                         .HasColumnType("TEXT");
 
                     b.Property<string>("UserName")
@@ -215,8 +306,6 @@ namespace APP.Migrations
                         .HasColumnType("TEXT");
 
                     b.HasKey("Id");
-
-                    b.HasIndex("GroupId");
 
                     b.ToTable("Users");
                 });
@@ -234,74 +323,172 @@ namespace APP.Migrations
                     b.ToTable("UserRoles");
                 });
 
-            modelBuilder.Entity("APP.DataAccess.Entities.Playlist", b =>
+            modelBuilder.Entity("APP.DataAccess.Entities.Album", b =>
                 {
-                    b.HasOne("APP.DataAccess.Entities.User", "User")
-                        .WithMany("Playlists")
-                        .HasForeignKey("UserId")
+                    b.HasOne("APP.DataAccess.Entities.Artist", "Artist")
+                        .WithMany("Albums")
+                        .HasForeignKey("ArtistId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
-                    b.Navigation("User");
+                    b.Navigation("Artist");
                 });
 
-            modelBuilder.Entity("APP.DataAccess.Entities.PlaylistTrack", b =>
+            modelBuilder.Entity("APP.DataAccess.Entities.Playlist", b =>
+                {
+                    b.HasOne("APP.DataAccess.Entities.User", "OwnerUser")
+                        .WithMany("Playlists")
+                        .HasForeignKey("OwnerUserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("OwnerUser");
+                });
+
+            modelBuilder.Entity("APP.DataAccess.Entities.PlaylistMember", b =>
                 {
                     b.HasOne("APP.DataAccess.Entities.Playlist", "Playlist")
-                        .WithMany("PlaylistTracks")
+                        .WithMany("PlaylistMembers")
                         .HasForeignKey("PlaylistId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
-                    b.HasOne("APP.DataAccess.Entities.Track", "Track")
-                        .WithMany("PlaylistTracks")
-                        .HasForeignKey("TrackId")
+                    b.HasOne("APP.DataAccess.Entities.User", "User")
+                        .WithMany("PlaylistMembers")
+                        .HasForeignKey("UserId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
                     b.Navigation("Playlist");
 
-                    b.Navigation("Track");
+                    b.Navigation("User");
                 });
 
-            modelBuilder.Entity("APP.DataAccess.Entities.TrackArtist", b =>
+            modelBuilder.Entity("APP.DataAccess.Entities.PlaylistSong", b =>
                 {
-                    b.HasOne("APP.DataAccess.Entities.Track", null)
-                        .WithMany("TrackArtists")
-                        .HasForeignKey("TrackId")
+                    b.HasOne("APP.DataAccess.Entities.Playlist", "Playlist")
+                        .WithMany("PlaylistSongs")
+                        .HasForeignKey("PlaylistId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("APP.DataAccess.Entities.Song", "Song")
+                        .WithMany("PlaylistSongs")
+                        .HasForeignKey("SongId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Playlist");
+
+                    b.Navigation("Song");
+                });
+
+            modelBuilder.Entity("APP.DataAccess.Entities.Song", b =>
+                {
+                    b.HasOne("APP.DataAccess.Entities.Album", "Album")
+                        .WithMany("Songs")
+                        .HasForeignKey("AlbumId");
+
+                    b.HasOne("APP.DataAccess.Entities.Artist", "Artist")
+                        .WithMany("Songs")
+                        .HasForeignKey("ArtistId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Album");
+
+                    b.Navigation("Artist");
+                });
+
+            modelBuilder.Entity("APP.DataAccess.Entities.SongGenre", b =>
+                {
+                    b.HasOne("APP.DataAccess.Entities.Genre", "Genre")
+                        .WithMany("SongGenres")
+                        .HasForeignKey("GenreId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("APP.DataAccess.Entities.Song", "Song")
+                        .WithMany("SongGenres")
+                        .HasForeignKey("SongId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Genre");
+
+                    b.Navigation("Song");
+                });
+
+            modelBuilder.Entity("APP.DataAccess.Entities.SongRating", b =>
+                {
+                    b.HasOne("APP.DataAccess.Entities.Song", "Song")
+                        .WithMany("SongRatings")
+                        .HasForeignKey("SongId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("APP.DataAccess.Entities.User", "User")
+                        .WithMany("SongRatings")
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Song");
+
+                    b.Navigation("User");
+                });
+
+            modelBuilder.Entity("APP.DataAccess.Entities.UserRole", b =>
+                {
+                    b.HasOne("APP.DataAccess.Entities.User", null)
+                        .WithMany("UserRoles")
+                        .HasForeignKey("UserId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
                 });
 
-            modelBuilder.Entity("APP.DataAccess.Entities.User", b =>
+            modelBuilder.Entity("APP.DataAccess.Entities.Album", b =>
                 {
-                    b.HasOne("APP.DataAccess.Entities.Group", "Group")
-                        .WithMany("Users")
-                        .HasForeignKey("GroupId");
-
-                    b.Navigation("Group");
+                    b.Navigation("Songs");
                 });
 
-            modelBuilder.Entity("APP.DataAccess.Entities.Group", b =>
+            modelBuilder.Entity("APP.DataAccess.Entities.Artist", b =>
                 {
-                    b.Navigation("Users");
+                    b.Navigation("Albums");
+
+                    b.Navigation("Songs");
+                });
+
+            modelBuilder.Entity("APP.DataAccess.Entities.Genre", b =>
+                {
+                    b.Navigation("SongGenres");
                 });
 
             modelBuilder.Entity("APP.DataAccess.Entities.Playlist", b =>
                 {
-                    b.Navigation("PlaylistTracks");
+                    b.Navigation("PlaylistMembers");
+
+                    b.Navigation("PlaylistSongs");
                 });
 
-            modelBuilder.Entity("APP.DataAccess.Entities.Track", b =>
+            modelBuilder.Entity("APP.DataAccess.Entities.Song", b =>
                 {
-                    b.Navigation("PlaylistTracks");
+                    b.Navigation("PlaylistSongs");
 
-                    b.Navigation("TrackArtists");
+                    b.Navigation("SongGenres");
+
+                    b.Navigation("SongRatings");
                 });
 
             modelBuilder.Entity("APP.DataAccess.Entities.User", b =>
                 {
+                    b.Navigation("PlaylistMembers");
+
                     b.Navigation("Playlists");
+
+                    b.Navigation("SongRatings");
+
+                    b.Navigation("UserRoles");
                 });
 #pragma warning restore 612, 618
         }

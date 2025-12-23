@@ -31,9 +31,18 @@
                         <li class="nav-item">
                             <a class="nav-link text-dark" asp-area="" asp-controller="Role" asp-action="Index">Roles</a>
                         </li>
+                        <li class="nav-item">
+                            <a class="nav-link text-dark" asp-area="" asp-controller="Song" asp-action="Index">Songs</a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link text-dark" asp-area="" asp-controller="Album" asp-action="Index">Albums</a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link text-dark" asp-area="" asp-controller="Artist" asp-action="Index">Artists</a>
+                        </li>
                     </ul>
                     <ul class="navbar-nav">
-                        @if (User.Identity.IsAuthenticated)
+                        @if (User.Identity?.IsAuthenticated == true)
                         {
                             <li class="nav-item">
                                 <span class="nav-link text-dark">@User.Identity.Name</span>

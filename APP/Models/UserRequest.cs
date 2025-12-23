@@ -4,13 +4,17 @@ namespace APP.Models
 {
     public class UserRequest : Request
     {
-        public int Id { get; set; }
+
         public string UserName { get; set; }
-        public string Email { get; set; }
+        // Email removed as per schema strictness
         public string Password { get; set; }
+        public string FirstName { get; set; }
+        public string LastName { get; set; }
+        public APP.DataAccess.Entities.Genders Gender { get; set; } // Use full name or using
+
         public bool IsActive { get; set; }
-        public DateTime BirthDate { get; set; }
-        public int? GroupId { get; set; }
+        public DateTime? BirthDate { get; set; }
+
     }
 }
 

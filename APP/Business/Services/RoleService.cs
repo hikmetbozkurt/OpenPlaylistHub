@@ -24,8 +24,7 @@ namespace APP.Business.Services
                 {
                     Id = r.Id,
                     Guid = r.Guid,
-                    Name = r.Name,
-                    Description = r.Description
+                    Name = r.Name
                 })
                 .ToList();
         }
@@ -38,8 +37,7 @@ namespace APP.Business.Services
                 {
                     Id = r.Id,
                     Guid = r.Guid,
-                    Name = r.Name,
-                    Description = r.Description
+                    Name = r.Name
                 })
                 .SingleOrDefault();
         }
@@ -55,8 +53,7 @@ namespace APP.Business.Services
             return new RoleRequest
             {
                 Id = role.Id,
-                Name = role.Name,
-                Description = role.Description
+                Name = role.Name
             };
         }
 
@@ -69,8 +66,7 @@ namespace APP.Business.Services
 
             var entity = new Role
             {
-                Name = request.Name,
-                Description = request.Description
+                Name = request.Name
             };
 
             Create(entity);
@@ -92,7 +88,6 @@ namespace APP.Business.Services
             }
 
             entity.Name = request.Name;
-            entity.Description = request.Description;
 
             Update(entity);
 

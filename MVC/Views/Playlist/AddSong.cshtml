@@ -1,0 +1,57 @@
+@using APP.Models
+@{
+    ViewData["Title"] = "Add Song to Playlist";
+    var playlist = ViewBag.Playlist as PlaylistResponse;
+    var songs = ViewBag.Songs as List<SongResponse>;
+}
+
+<h1>Add Song to Playlist</h1>
+
+<h4>Playlist: @(playlist?.Name ?? "Unknown")</h4>
+<hr />
+
+@if (songs != null && songs.Any())
+{
+    <table class="table">
+        <thead>
+            <tr>
+                <th>Title</th>
+                <th>Album</th>
+                <th>Duration</th>
+                <th>Rating</th>
+                <th>Genres</th>
+                <th>Artist</th>
+                <th></th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var song in songs)
+            {
+                <tr>
+                    <td>@song.Title</td>
+                    <td>@song.AlbumTitle</td>
+                    <td>@(song.DurationSeconds.HasValue ? TimeSpan.FromSeconds(song.DurationSeconds.Value).ToString(@"mm\:ss") : "-")</td>
+                    <td>@song.AverageRating</td>
+                    <td>@song.GenreNames</td>
+                    <td>@song.ArtistName</td>
+                    <td>
+                        <form asp-action="AddSong" method="post">
+                            <input type="hidden" name="playlistId" value="@playlist?.Id" />
+                            <input type="hidden" name="songId" value="@song.Id" />
+                            <input type="submit" value="Add" class="btn btn-primary btn-sm" />
+                        </form>
+                    </td>
+                </tr>
+            }
+        </tbody>
+    </table>
+}
+else
+{
+    <p>No available songs to add.</p>
+}
+
+<div>
+    <a asp-action="Details" asp-route-id="@playlist?.Id">Back to Playlist</a>
+</div>
+
